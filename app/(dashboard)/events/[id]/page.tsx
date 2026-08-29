@@ -64,8 +64,9 @@ export default function EventDetailPage() {
   const [installmentForm, setInstallmentForm] = useState({ amount: '', payment_date: new Date().toISOString().split('T')[0], notes: '' })
   const [savingInstallment, setSavingInstallment] = useState(false)
 
-  // Import State
+  // Import / Export State
   const [importing, setImporting] = useState(false)
+  const [exporting, setExporting] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const load = useCallback(async () => {
@@ -202,10 +203,18 @@ export default function EventDetailPage() {
   }
 
   // Import / Export Handlers
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     if (!event) return
-    const note = `Biaya default per orang: ${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(event.target_amount_per_person)}. Peserta dengan biaya berbeda ditandai secara khusus.`
-    exportParticipantsPDF(participants, event.name, event.target_amount_per_person, note)
+    setExporting(true)
+    try {
+      const note = `Biaya default per orang: ${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(event.target_amount_per_person)}. Peserta dengan biaya berbeda ditandai secara khusus.`
+      await exportParticipantsPDF(participants, event.name, event.target_amount_per_person, note)
+      toast.success('Laporan PDF berhasil di-generate')
+    } catch (err: any) {
+      toast.error('Gagal men-generate PDF: ' + err.message)
+    } finally {
+      setExporting(false)
+    }
   }
 
   const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -328,8 +337,8 @@ export default function EventDetailPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
         <h2 className="text-base font-bold" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Daftar Peserta</h2>
         <div className="flex flex-wrap items-center gap-2">
-          <button onClick={handleExportPDF} className="btn-secondary text-sm py-2 px-3 flex items-center gap-1">
-            <FileDown size={14} /> PDF
+          <button onClick={handleExportPDF} disabled={exporting} className="btn-secondary text-sm py-2 px-3 flex items-center gap-1">
+            {exporting ? <Loader2 size={14} className="animate-spin" /> : <FileDown size={14} />} PDF
           </button>
           
           <div className="relative group">
