@@ -231,12 +231,14 @@ export default function EventDetailPage() {
       }
 
       // Format data for insert
+      const now = Date.now()
       const rowsToInsert = data
         .filter(row => row.name && row.name !== 'HAPUS BARIS CONTOH INI SEBELUM IMPORT')
-        .map(row => ({
+        .map((row, index) => ({
           event_id: eventId,
           name: row.name.toString().trim(),
-          target_amount: row.target_amount ? parseFloat(row.target_amount) : null
+          target_amount: row.target_amount ? parseFloat(row.target_amount) : null,
+          created_at: new Date(now + index * 1000).toISOString()
         }))
 
       if (rowsToInsert.length === 0) {
