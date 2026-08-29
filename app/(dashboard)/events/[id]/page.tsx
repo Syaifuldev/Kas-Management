@@ -75,7 +75,7 @@ export default function EventDetailPage() {
     if (!ev) { router.push('/events'); return }
     setEvent(ev as Event)
 
-    const { data: parts } = await supabase.from('event_participants').select('*').eq('event_id', eventId).order('created_at', { ascending: true })
+    const { data: parts } = await supabase.from('event_participants').select('*').eq('event_id', eventId).order('created_at', { ascending: true }).order('id', { ascending: true })
     const partsList = (parts ?? []) as EventParticipant[]
 
     const enriched: ParticipantWithData[] = await Promise.all(
@@ -272,7 +272,7 @@ export default function EventDetailPage() {
   if (!event) return null
 
   const totalCollected = participants.reduce((s, p) => s + p.totalPaid, 0)
-  const totalTarget = event.target_amount_per_person * participants.length
+  const totalTarget = participants.reduce((s, p) => s + p.activeTarget, 0)
   const pct = totalTarget > 0 ? Math.min((totalCollected / totalTarget) * 100, 100) : 0
   const countPaid = participants.filter(p => p.payment_status === 'paid').length
   const countPartial = participants.filter(p => p.payment_status === 'partial').length
