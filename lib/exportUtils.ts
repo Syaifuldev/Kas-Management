@@ -15,21 +15,46 @@ export function exportTransactionsPDF(transactions: any[], kasName: string) {
   doc.setFontSize(10)
   doc.text(`Tanggal Cetak: ${formatDate(new Date().toISOString().split('T')[0])}`, 14, 22)
 
-  const tableColumn = ["Tanggal", "Tipe", "Kategori", "Keterangan", "Nominal"]
-  const tableRows = transactions.map(t => [
-    formatDate(t.date),
-    t.type === 'income' ? 'Pemasukan' : 'Pengeluaran',
-    t.category || '-',
-    t.description || '-',
-    formatRupiah(t.amount)
-  ])
+  const tableColumn = ["No", "Tanggal", "Tipe", "Kategori", "Keterangan", "Nominal"]
+
+  let totalIncome = 0
+  let totalExpense = 0
+
+  const tableRows = transactions.map((t, idx) => {
+    const amount = Number(t.amount)
+    if (t.type === 'income') totalIncome += amount
+    else totalExpense += amount
+
+    return [
+      idx + 1,
+      formatDate(t.date),
+      t.type === 'income' ? 'Pemasukan' : 'Pengeluaran',
+      t.category || '-',
+      t.description || '-',
+      (t.type === 'income' ? '+' : '-') + formatRupiah(amount)
+    ]
+  })
+
+  // Total rows
+  tableRows.push(
+    ['', '', '', '', 'Total Pemasukan', formatRupiah(totalIncome)],
+    ['', '', '', '', 'Total Pengeluaran', formatRupiah(totalExpense)],
+    ['', '', '', '', 'Saldo Akhir', formatRupiah(totalIncome - totalExpense)]
+  )
 
   autoTable(doc, {
     head: [tableColumn],
     body: tableRows,
     startY: 28,
     styles: { fontSize: 9 },
-    headStyles: { fillColor: [99, 102, 241] } // Indigo 500
+    headStyles: { fillColor: [99, 102, 241] },
+    didParseCell: (data) => {
+      const totalRowStart = tableRows.length - 3
+      if (data.row.index >= totalRowStart) {
+        data.cell.styles.fontStyle = 'bold'
+        data.cell.styles.fillColor = [30, 30, 50]
+      }
+    }
   })
 
   doc.save(`Laporan_Kas_${kasName.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`)
@@ -43,15 +68,25 @@ export function exportParticipantsPDF(participants: any[], eventName: string, de
   doc.setFontSize(10)
   doc.text(`Tanggal Cetak: ${formatDate(new Date().toISOString().split('T')[0])}`, 14, 22)
 
-  const tableColumn = ["Nama", "Status", "Target Biaya", "Telah Dibayar", "Sisa"]
-  const tableRows = participants.map(p => {
+  const tableColumn = ["No", "Nama", "Status", "Target Biaya", "Telah Dibayar", "Sisa"]
+
+  let grandTotalTarget = 0
+  let grandTotalPaid = 0
+  let grandTotalRemaining = 0
+
+  const tableRows = participants.map((p, idx) => {
     const target = p.target_amount ?? defaultCost
     const remaining = Math.max(0, target - p.totalPaid)
     let statusLabel = 'Belum Bayar'
     if (p.payment_status === 'paid') statusLabel = 'Lunas'
     else if (p.payment_status === 'partial') statusLabel = 'Mencicil'
 
+    grandTotalTarget += target
+    grandTotalPaid += p.totalPaid
+    grandTotalRemaining += remaining
+
     return [
+      idx + 1,
       p.name,
       statusLabel,
       formatRupiah(target),
@@ -60,12 +95,29 @@ export function exportParticipantsPDF(participants: any[], eventName: string, de
     ]
   })
 
+  // Total row
+  tableRows.push([
+    '',
+    'TOTAL',
+    `${participants.filter(p => p.payment_status === 'paid').length} Lunas / ${participants.length} Orang`,
+    formatRupiah(grandTotalTarget),
+    formatRupiah(grandTotalPaid),
+    formatRupiah(grandTotalRemaining)
+  ])
+
   autoTable(doc, {
     head: [tableColumn],
     body: tableRows,
     startY: 28,
     styles: { fontSize: 9 },
-    headStyles: { fillColor: [99, 102, 241] }
+    headStyles: { fillColor: [99, 102, 241] },
+    // Style for total row
+    didParseCell: (data) => {
+      if (data.row.index === tableRows.length - 1) {
+        data.cell.styles.fontStyle = 'bold'
+        data.cell.styles.fillColor = [30, 30, 50]
+      }
+    }
   })
 
   doc.save(`Peserta_${eventName.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`)

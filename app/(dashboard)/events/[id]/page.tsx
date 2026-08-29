@@ -373,9 +373,9 @@ export default function EventDetailPage() {
             <div key={p.id} className="glass rounded-2xl overflow-hidden transition-all" style={{ animationDelay: `${idx * 0.04}s` }}>
               {/* Participant Row */}
               <div className="flex items-center gap-3 p-4">
-                {/* Avatar */}
+                {/* Nomor Urut */}
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-sm font-bold" style={{ background: 'linear-gradient(135deg,rgba(99,102,241,0.2),rgba(168,85,247,0.15))', color: '#a5b4fc', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-                  {p.name.charAt(0).toUpperCase()}
+                  {idx + 1}
                 </div>
 
                 <div className="flex-1 min-w-0">
