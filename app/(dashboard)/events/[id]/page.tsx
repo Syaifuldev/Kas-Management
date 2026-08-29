@@ -292,11 +292,7 @@ export default function EventDetailPage() {
         </div>
 
         {/* Stats Row */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-          <div className="p-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.05)' }}>
-            <p className="text-xs mb-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>Biaya/orang</p>
-            <p className="text-sm font-bold" style={{ color: '#a5b4fc', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>{formatRupiah(event.target_amount_per_person)}</p>
-          </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
           <div className="p-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.05)' }}>
             <p className="text-xs mb-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>Terkumpul</p>
             <p className="text-sm font-bold" style={{ color: '#4ade80', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>{formatRupiah(totalCollected)}</p>

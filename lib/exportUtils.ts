@@ -71,7 +71,7 @@ function drawPDFFooter(doc: jsPDF, note?: string) {
 export function exportTransactionsPDF(transactions: any[], kasName: string, note?: string) {
   const doc = new jsPDF()
 
-  drawPDFHeader(doc, 'Laporan Buku Kas', kasName)
+  drawPDFHeader(doc, kasName, 'Laporan Buku Kas')
 
   const tableColumn = ['No', 'Tanggal', 'Tipe', 'Kategori', 'Keterangan', 'Nominal']
 
@@ -105,21 +105,22 @@ export function exportTransactionsPDF(transactions: any[], kasName: string, note
     body: tableRows,
     startY: 50,
     styles: {
-      fontSize: 8.5,
-      cellPadding: { top: 4, bottom: 4, left: 5, right: 5 },
+      fontSize: 9,
+      cellPadding: { top: 5, bottom: 5, left: 5, right: 5 },
       textColor: [30, 30, 30],
     },
     headStyles: {
       fillColor: [99, 102, 241],
       textColor: [255, 255, 255],
       fontStyle: 'bold',
-      fontSize: 8.5,
+      fontSize: 9.5,
+      halign: 'center'
     },
     alternateRowStyles: { fillColor: [248, 249, 255] },
     columnStyles: {
-      0: { cellWidth: 10, halign: 'center' },
-      1: { cellWidth: 24 },
-      2: { cellWidth: 20 },
+      0: { cellWidth: 12, halign: 'center' },
+      1: { cellWidth: 26, halign: 'center' },
+      2: { cellWidth: 26, halign: 'center' },
       3: { cellWidth: 25 },
       5: { halign: 'right', cellWidth: 32 },
     },
@@ -140,7 +141,7 @@ export function exportTransactionsPDF(transactions: any[], kasName: string, note
 export function exportParticipantsPDF(participants: any[], eventName: string, defaultCost: number, note?: string) {
   const doc = new jsPDF()
 
-  drawPDFHeader(doc, 'Laporan Peserta Event', eventName)
+  drawPDFHeader(doc, eventName, 'Laporan Peserta Event')
 
   const tableColumn = ['No', 'Nama Peserta', 'Status', 'Target Biaya', 'Telah Dibayar', 'Sisa']
 
@@ -182,20 +183,22 @@ export function exportParticipantsPDF(participants: any[], eventName: string, de
     body: tableRows,
     startY: 50,
     styles: {
-      fontSize: 8.5,
-      cellPadding: { top: 4, bottom: 4, left: 5, right: 5 },
+      fontSize: 9,
+      cellPadding: { top: 5, bottom: 5, left: 5, right: 5 },
       textColor: [30, 30, 30],
     },
     headStyles: {
       fillColor: [99, 102, 241],
       textColor: [255, 255, 255],
       fontStyle: 'bold',
-      fontSize: 8.5,
+      fontSize: 9.5,
+      halign: 'center'
     },
     alternateRowStyles: { fillColor: [248, 249, 255] },
     columnStyles: {
-      0: { cellWidth: 10, halign: 'center' },
-      2: { cellWidth: 24, halign: 'center' },
+      0: { cellWidth: 12, halign: 'center' },
+      1: { halign: 'left' },
+      2: { cellWidth: 26, halign: 'center' },
       3: { halign: 'right' },
       4: { halign: 'right' },
       5: { halign: 'right' },
