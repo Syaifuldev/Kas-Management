@@ -4,7 +4,10 @@ import { formatRupiah, formatDate } from '@/lib/utils'
 
 const styles = StyleSheet.create({
   page: {
-    padding: 30,
+    paddingTop: 30,
+    paddingLeft: 30,
+    paddingRight: 30,
+    paddingBottom: 70,
     fontFamily: 'Helvetica',
     fontSize: 9,
     color: '#334155'
