@@ -88,6 +88,7 @@ export default function LoginPage() {
             Belum punya akun?{' '}
             <Link href="/register" className="font-medium" style={{ color: '#818cf8' }}>Daftar</Link>
           </p>
+        </div>
         <div className="mt-8 text-center text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
           &copy; {new Date().getFullYear()} Syaiful Dev. All rights reserved.
         </div>
