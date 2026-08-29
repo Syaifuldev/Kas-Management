@@ -7,9 +7,11 @@ import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { formatRupiah, formatDate, getPaymentStatusLabel } from '@/lib/utils'
 import type { Event, EventParticipant, Installment } from '@/types'
+import { exportParticipantsPDF, downloadParticipantsTemplate, parseExcel } from '@/lib/exportUtils'
 import {
   ArrowLeft, Plus, Trash2, Pencil, X, Loader2, ChevronDown,
-  ChevronUp, CalendarDays, Users, Wallet, CheckCircle2, Clock, AlertCircle
+  ChevronUp, CalendarDays, Users, Wallet, CheckCircle2, Clock, AlertCircle,
+  FileDown, FileUp
 } from 'lucide-react'
 import { toast } from 'sonner'
 import Link from 'next/link'
@@ -18,6 +20,7 @@ interface ParticipantWithData extends EventParticipant {
   installments: Installment[]
   totalPaid: number
   remaining: number
+  activeTarget: number
 }
 
 function getStatusStyle(status: string) {
@@ -51,6 +54,7 @@ export default function EventDetailPage() {
   const [showParticipantModal, setShowParticipantModal] = useState(false)
   const [editParticipant, setEditParticipant] = useState<EventParticipant | null>(null)
   const [participantName, setParticipantName] = useState('')
+  const [participantTarget, setParticipantTarget] = useState('')
   const [savingParticipant, setSavingParticipant] = useState(false)
 
   // Installment modal
@@ -59,6 +63,10 @@ export default function EventDetailPage() {
   const [editInstallment, setEditInstallment] = useState<Installment | null>(null)
   const [installmentForm, setInstallmentForm] = useState({ amount: '', payment_date: new Date().toISOString().split('T')[0], notes: '' })
   const [savingInstallment, setSavingInstallment] = useState(false)
+
+  // Import State
+  const [importing, setImporting] = useState(false)
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -78,10 +86,14 @@ export default function EventDetailPage() {
       })
     )
     // Compute remaining after we have event target
-    const withRemaining = enriched.map(p => ({
-      ...p,
-      remaining: Math.max(0, (ev as Event).target_amount_per_person - p.totalPaid)
-    }))
+    const withRemaining = enriched.map(p => {
+      const activeTarget = p.target_amount ?? (ev as Event).target_amount_per_person
+      return {
+        ...p,
+        activeTarget,
+        remaining: Math.max(0, activeTarget - p.totalPaid)
+      }
+    })
     setParticipants(withRemaining)
     setLoading(false)
   }, [eventId])
@@ -97,19 +109,31 @@ export default function EventDetailPage() {
   }
 
   // Participant CRUD
-  const openAddParticipant = () => { setEditParticipant(null); setParticipantName(''); setShowParticipantModal(true) }
-  const openEditParticipant = (p: EventParticipant) => { setEditParticipant(p); setParticipantName(p.name); setShowParticipantModal(true) }
+  const openAddParticipant = () => { setEditParticipant(null); setParticipantName(''); setParticipantTarget(''); setShowParticipantModal(true) }
+  const openEditParticipant = (p: EventParticipant) => { setEditParticipant(p); setParticipantName(p.name); setParticipantTarget(p.target_amount ? String(p.target_amount) : ''); setShowParticipantModal(true) }
 
   const handleSaveParticipant = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!participantName.trim()) return
     setSavingParticipant(true)
+    const targetAmt = participantTarget ? parseFloat(participantTarget) : null
+    
     if (editParticipant) {
-      const { error } = await supabase.from('event_participants').update({ name: participantName.trim() }).eq('id', editParticipant.id)
+      const { error } = await supabase.from('event_participants').update({ name: participantName.trim(), target_amount: targetAmt }).eq('id', editParticipant.id)
       if (error) toast.error('Gagal update: ' + error.message)
-      else { toast.success('Nama peserta diupdate!'); setShowParticipantModal(false); load() }
+      else { 
+        toast.success('Peserta diupdate!')
+        
+        // Recalculate status based on new target if there are installments
+        const { data: allInstalls } = await supabase.from('installments').select('amount').eq('participant_id', editParticipant.id)
+        const total = (allInstalls ?? []).reduce((s: number, i: { amount: number }) => s + Number(i.amount), 0)
+        await updatePaymentStatus(editParticipant.id, total, targetAmt ?? event!.target_amount_per_person)
+        
+        setShowParticipantModal(false)
+        load() 
+      }
     } else {
-      const { error } = await supabase.from('event_participants').insert({ event_id: eventId, name: participantName.trim() })
+      const { error } = await supabase.from('event_participants').insert({ event_id: eventId, name: participantName.trim(), target_amount: targetAmt })
       if (error) toast.error('Gagal menambah peserta: ' + error.message)
       else { toast.success(`${participantName} ditambahkan!`); setShowParticipantModal(false); load() }
     }
@@ -155,7 +179,9 @@ export default function EventDetailPage() {
     // Recalculate total paid for this participant and update status
     const { data: allInstalls } = await supabase.from('installments').select('amount').eq('participant_id', activeParticipantId)
     const total = (allInstalls ?? []).reduce((s: number, i: { amount: number }) => s + Number(i.amount), 0)
-    await updatePaymentStatus(activeParticipantId, total, event.target_amount_per_person)
+    const participant = participants.find(p => p.id === activeParticipantId)
+    const target = participant?.target_amount ?? event.target_amount_per_person
+    await updatePaymentStatus(activeParticipantId, total, target)
 
     toast.success(editInstallment ? 'Cicilan diupdate!' : 'Pembayaran dicatat!')
     setShowInstallmentModal(false)
@@ -168,9 +194,59 @@ export default function EventDetailPage() {
     await supabase.from('installments').delete().eq('id', installId)
     const { data: allInstalls } = await supabase.from('installments').select('amount').eq('participant_id', participantId)
     const total = (allInstalls ?? []).reduce((s: number, i: { amount: number }) => s + Number(i.amount), 0)
-    await updatePaymentStatus(participantId, total, event.target_amount_per_person)
+    const participant = participants.find(p => p.id === participantId)
+    const target = participant?.target_amount ?? event.target_amount_per_person
+    await updatePaymentStatus(participantId, total, target)
     toast.success('Cicilan dihapus')
     load()
+  }
+
+  // Import / Export Handlers
+  const handleExportPDF = () => {
+    if (!event) return
+    exportParticipantsPDF(participants, event.name, event.target_amount_per_person)
+  }
+
+  const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setImporting(true)
+    try {
+      const data = await parseExcel(file)
+      if (!data || data.length === 0) {
+        toast.error('File Excel kosong atau format salah')
+        setImporting(false)
+        return
+      }
+
+      // Format data for insert
+      const rowsToInsert = data
+        .filter(row => row.name && row.name !== 'HAPUS BARIS CONTOH INI SEBELUM IMPORT')
+        .map(row => ({
+          event_id: eventId,
+          name: row.name.toString().trim(),
+          target_amount: row.target_amount ? parseFloat(row.target_amount) : null
+        }))
+
+      if (rowsToInsert.length === 0) {
+        toast.error('Tidak ada data valid untuk diimport')
+        setImporting(false)
+        return
+      }
+
+      const { error } = await supabase.from('event_participants').insert(rowsToInsert)
+      
+      if (error) throw error
+      
+      toast.success(`${rowsToInsert.length} peserta berhasil diimport!`)
+      load()
+    } catch (err: any) {
+      toast.error('Gagal import: ' + err.message)
+    } finally {
+      setImporting(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
   }
 
   if (loading) {
@@ -252,11 +328,32 @@ export default function EventDetailPage() {
       </div>
 
       {/* Participants Section */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
         <h2 className="text-base font-bold" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Daftar Peserta</h2>
-        <button className="btn-primary text-sm py-2 px-4" onClick={openAddParticipant}>
-          <Plus size={14} /> Tambah Peserta
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button onClick={handleExportPDF} className="btn-secondary text-sm py-2 px-3 flex items-center gap-1">
+            <FileDown size={14} /> PDF
+          </button>
+          
+          <div className="relative group">
+            <button className="btn-secondary text-sm py-2 px-3 flex items-center gap-1">
+              <FileUp size={14} /> Import Excel
+            </button>
+            <div className="absolute right-0 top-full mt-1 w-48 p-2 rounded-xl glass border border-white/10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+              <button onClick={downloadParticipantsTemplate} className="w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-white/5 transition-colors mb-1" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                1. Download Template
+              </button>
+              <label className="w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-white/5 transition-colors cursor-pointer block" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                {importing ? '2. Mengimpor...' : '2. Upload File Excel'}
+                <input type="file" accept=".xlsx, .xls" className="hidden" onChange={handleImportExcel} ref={fileInputRef} disabled={importing} />
+              </label>
+            </div>
+          </div>
+
+          <button className="btn-primary text-sm py-2 px-4 ml-auto sm:ml-0" onClick={openAddParticipant}>
+            <Plus size={14} /> Tambah
+          </button>
+        </div>
       </div>
 
       {participants.length === 0 && (
@@ -270,7 +367,7 @@ export default function EventDetailPage() {
 
       <div className="space-y-3">
         {participants.map((p, idx) => {
-          const pctParticipant = Math.min((p.totalPaid / event.target_amount_per_person) * 100, 100)
+          const pctParticipant = p.activeTarget > 0 ? Math.min((p.totalPaid / p.activeTarget) * 100, 100) : 0
           const isExpanded = expandedId === p.id
           return (
             <div key={p.id} className="glass rounded-2xl overflow-hidden transition-all" style={{ animationDelay: `${idx * 0.04}s` }}>
@@ -284,6 +381,11 @@ export default function EventDetailPage() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <p className="text-sm font-semibold truncate">{p.name}</p>
+                    {p.target_amount && (
+                      <span className="badge flex-shrink-0" style={{ background: 'rgba(99,102,241,0.15)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.2)' }}>
+                        Kustom: {formatRupiah(p.target_amount)}
+                      </span>
+                    )}
                     <span className="badge flex-shrink-0" style={getStatusStyle(p.payment_status)}>
                       {getStatusIcon(p.payment_status)}{getPaymentStatusLabel(p.payment_status)}
                     </span>
@@ -382,6 +484,20 @@ export default function EventDetailPage() {
                   onChange={e => setParticipantName(e.target.value)}
                   required
                 />
+              </div>
+              <div>
+                <label className="block text-xs mb-1.5" style={{ color: 'rgba(255,255,255,0.5)' }}>Biaya Kustom (Opsional)</label>
+                <input
+                  type="number"
+                  className="input-base"
+                  placeholder={`Default: ${formatRupiah(event.target_amount_per_person)}`}
+                  value={participantTarget}
+                  onChange={e => setParticipantTarget(e.target.value)}
+                  min="0"
+                />
+                <p className="text-[10px] mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                  Isi jika biaya untuk peserta ini berbeda dengan biaya default event.
+                </p>
               </div>
               <div className="flex gap-2 pt-1">
                 <button type="button" onClick={() => setShowParticipantModal(false)} className="btn-secondary flex-1 justify-center">Batal</button>

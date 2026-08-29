@@ -96,6 +96,8 @@ export default function RegisterPage() {
             Sudah punya akun?{' '}
             <Link href="/login" className="font-medium" style={{ color: '#818cf8' }}>Masuk</Link>
           </p>
+        <div className="mt-8 text-center text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
+          &copy; {new Date().getFullYear()} Syaiful Dev. All rights reserved.
         </div>
       </div>
     </div>

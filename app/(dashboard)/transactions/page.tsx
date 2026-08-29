@@ -7,11 +7,13 @@ import { createClient } from '@/lib/supabase/client'
 import { useKas } from '@/lib/context/KasContext'
 import { formatRupiah, formatDate } from '@/lib/utils'
 import type { Transaction } from '@/types'
+import { exportTransactionsPDF, downloadTransactionsTemplate, parseExcel } from '@/lib/exportUtils'
 import {
   Plus, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight,
-  Pencil, Trash2, X, Loader2, Search
+  Pencil, Trash2, X, Loader2, Search, FileDown, FileUp
 } from 'lucide-react'
 import { toast } from 'sonner'
+import React from 'react'
 
 const CATEGORIES_INCOME = ['Iuran', 'Donasi', 'Infaq', 'Transfer', 'Lainnya']
 const CATEGORIES_EXPENSE = ['Konsumsi', 'Transport', 'Perlengkapan', 'Administrasi', 'Lainnya']
@@ -37,6 +39,10 @@ export default function TransactionsPage() {
   const [saving, setSaving] = useState(false)
   const [filter, setFilter] = useState<'all' | 'income' | 'expense'>('all')
   const [search, setSearch] = useState('')
+
+  // Import State
+  const [importing, setImporting] = useState(false)
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
 
   const load = useCallback(async () => {
     if (!activeKas) return
@@ -97,20 +103,89 @@ export default function TransactionsPage() {
     .filter(t => filter === 'all' || t.type === filter)
     .filter(t => !search || (t.description ?? '').toLowerCase().includes(search.toLowerCase()) || (t.category ?? '').toLowerCase().includes(search.toLowerCase()))
 
+  const handleExportPDF = () => {
+    if (!activeKas) return
+    exportTransactionsPDF(filtered, activeKas.name)
+  }
+
+  const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !activeKas) return
+
+    setImporting(true)
+    try {
+      const data = await parseExcel(file)
+      if (!data || data.length === 0) {
+        toast.error('File Excel kosong atau format salah')
+        setImporting(false)
+        return
+      }
+
+      // Format data for insert
+      const rowsToInsert = data
+        .filter(row => row.type && row.amount && row.date && row.description !== 'HAPUS BARIS CONTOH INI SEBELUM IMPORT')
+        .map(row => ({
+          organization_id: activeKas.id,
+          type: row.type === 'income' || row.type === 'expense' ? row.type : 'income',
+          amount: parseFloat(row.amount),
+          category: row.category || null,
+          description: row.description || null,
+          date: row.date
+        }))
+
+      if (rowsToInsert.length === 0) {
+        toast.error('Tidak ada data valid untuk diimport')
+        setImporting(false)
+        return
+      }
+
+      const { error } = await supabase.from('transactions').insert(rowsToInsert)
+      
+      if (error) throw error
+      
+      toast.success(`${rowsToInsert.length} transaksi berhasil diimport!`)
+      load()
+    } catch (err: any) {
+      toast.error('Gagal import: ' + err.message)
+    } finally {
+      setImporting(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
   const cats = form.type === 'income' ? CATEGORIES_INCOME : CATEGORIES_EXPENSE
 
   return (
     <div className="p-4 md:p-8 max-w-5xl mx-auto animate-fade-in">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
         <div>
           <h1 className="text-2xl font-bold" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Buku Kas</h1>
           <p className="text-sm mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>{activeKas?.name ?? '-'}</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <button onClick={handleExportPDF} className="btn-secondary text-sm py-2 px-3 flex items-center gap-1">
+            <FileDown size={14} /> PDF
+          </button>
+          
+          <div className="relative group">
+            <button className="btn-secondary text-sm py-2 px-3 flex items-center gap-1">
+              <FileUp size={14} /> Import Excel
+            </button>
+            <div className="absolute right-0 top-full mt-1 w-48 p-2 rounded-xl glass border border-white/10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+              <button onClick={downloadTransactionsTemplate} className="w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-white/5 transition-colors mb-1" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                1. Download Template
+              </button>
+              <label className="w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-white/5 transition-colors cursor-pointer block" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                {importing ? '2. Mengimpor...' : '2. Upload File Excel'}
+                <input type="file" accept=".xlsx, .xls" className="hidden" onChange={handleImportExcel} ref={fileInputRef} disabled={importing} />
+              </label>
+            </div>
+          </div>
+
           <button className="btn-secondary text-sm py-2 px-3 hidden sm:flex" onClick={() => openAdd('expense')}>
             <ArrowDownRight size={14} style={{ color: '#f87171' }} /> Pengeluaran
           </button>
-          <button className="btn-primary text-sm py-2 px-3" onClick={() => openAdd('income')}>
+          <button className="btn-primary text-sm py-2 px-3 ml-auto sm:ml-0" onClick={() => openAdd('income')}>
             <Plus size={14} /> Pemasukan
           </button>
         </div>

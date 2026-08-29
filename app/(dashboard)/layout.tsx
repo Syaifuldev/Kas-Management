@@ -42,8 +42,13 @@ function DashboardInner({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-      <main className="flex-1 md:ml-0 mt-14 md:mt-0 overflow-x-hidden">
-        {children}
+      <main className="flex-1 md:ml-0 mt-14 md:mt-0 overflow-x-hidden flex flex-col">
+        <div className="flex-1">
+          {children}
+        </div>
+        <footer className="py-6 text-center text-xs border-t" style={{ borderColor: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.3)' }}>
+          &copy; {new Date().getFullYear()} Syaiful Dev. All rights reserved.
+        </footer>
       </main>
     </div>
   )

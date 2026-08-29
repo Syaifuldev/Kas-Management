@@ -48,6 +48,7 @@ export interface EventParticipant {
   event_id: string
   name: string
   payment_status: 'unpaid' | 'partial' | 'paid'
+  target_amount?: number | null
   created_at: string
   installments?: Installment[]
 }
