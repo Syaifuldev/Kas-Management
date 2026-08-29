@@ -4,9 +4,8 @@ export const dynamic = 'force-dynamic'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
-import { Wallet, Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react'
+import { Wallet, Eye, EyeOff, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 export default function LoginPage() {
@@ -31,67 +30,115 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'radial-gradient(ellipse at top left, rgba(99,102,241,0.15) 0%, #0a0a0f 50%, rgba(168,85,247,0.08) 100%)' }}>
+    <div
+      className="min-h-screen flex flex-col items-center justify-center p-4"
+      style={{
+        background: 'radial-gradient(ellipse at top left, rgba(99,102,241,0.18) 0%, #090910 50%, rgba(168,85,247,0.1) 100%)',
+      }}
+    >
       <div className="w-full max-w-sm animate-fade-in">
+
         {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4" style={{ background: 'linear-gradient(135deg, #6366f1, #a855f7)' }}>
+        <div className="text-center mb-10">
+          <div
+            className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-5 shadow-lg"
+            style={{ background: 'linear-gradient(135deg, #6366f1, #a855f7)', boxShadow: '0 8px 32px rgba(99,102,241,0.4)' }}
+          >
             <Wallet size={28} color="white" />
           </div>
-          <h1 className="text-2xl font-bold gradient-text">Kas Management</h1>
-          <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>Masuk ke akun Anda</p>
+          <h1 className="text-3xl font-bold gradient-text" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+            Kas Management
+          </h1>
+          <p className="text-sm mt-2" style={{ color: 'rgba(255,255,255,0.4)' }}>
+            Masuk untuk mengelola keuangan Anda
+          </p>
         </div>
 
-        {/* Form */}
-        <div className="glass rounded-2xl p-6">
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: 'rgba(255,255,255,0.5)' }}>Email</label>
-              <div className="relative">
-                <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: 'rgba(255,255,255,0.3)' }} />
-                <input
-                  type="email"
-                  className="input-base pl-10"
-                  placeholder="nama@email.com"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  required
-                />
-              </div>
+        {/* Form Card */}
+        <div
+          className="rounded-2xl p-7"
+          style={{
+            background: 'rgba(255,255,255,0.04)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            backdropFilter: 'blur(20px)',
+          }}
+        >
+          <form onSubmit={handleLogin} className="space-y-5">
+
+            {/* Email */}
+            <div className="space-y-2">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium"
+                style={{ color: 'rgba(255,255,255,0.6)' }}
+              >
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                name="email"
+                autoComplete="email"
+                className="input-base w-full"
+                placeholder="nama@email.com"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                required
+              />
             </div>
 
-            <div>
-              <label className="block text-xs font-medium mb-1.5" style={{ color: 'rgba(255,255,255,0.5)' }}>Password</label>
+            {/* Password */}
+            <div className="space-y-2">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium"
+                style={{ color: 'rgba(255,255,255,0.6)' }}
+              >
+                Password
+              </label>
               <div className="relative">
-                <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: 'rgba(255,255,255,0.3)' }} />
                 <input
+                  id="password"
                   type={showPassword ? 'text' : 'password'}
-                  className="input-base pl-10 pr-10"
-                  placeholder="••••••••"
+                  name="password"
+                  autoComplete="current-password"
+                  className="input-base w-full pr-11"
+                  placeholder="Masukkan password"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   required
                 />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3.5 top-1/2 -translate-y-1/2" style={{ color: 'rgba(255,255,255,0.3)' }}>
-                  {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 p-0.5 rounded-md transition-colors"
+                  style={{ color: 'rgba(255,255,255,0.35)' }}
+                  tabIndex={-1}
+                  aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
             </div>
 
-            <button type="submit" className="btn-primary w-full justify-center py-3" disabled={loading}>
-              {loading ? <Loader2 size={16} className="animate-spin" /> : null}
-              {loading ? 'Masuk...' : 'Masuk'}
+            {/* Submit */}
+            <button
+              type="submit"
+              className="btn-primary w-full justify-center py-3 text-base font-semibold mt-2"
+              disabled={loading}
+              style={{ borderRadius: '12px', marginTop: '8px' }}
+            >
+              {loading ? <Loader2 size={18} className="animate-spin" /> : null}
+              {loading ? 'Sedang masuk...' : 'Masuk'}
             </button>
-          </form>
 
-          <p className="text-center text-sm mt-4" style={{ color: 'rgba(255,255,255,0.4)' }}>
-            Belum punya akun?{' '}
-            <Link href="/register" className="font-medium" style={{ color: '#818cf8' }}>Daftar</Link>
-          </p>
+          </form>
         </div>
-        <div className="mt-8 text-center text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>
+
+        {/* Copyright */}
+        <p className="text-center text-xs mt-8" style={{ color: 'rgba(255,255,255,0.25)' }}>
           &copy; {new Date().getFullYear()} Syaiful Dev. All rights reserved.
-        </div>
+        </p>
       </div>
     </div>
   )
