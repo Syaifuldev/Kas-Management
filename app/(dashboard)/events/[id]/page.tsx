@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { formatRupiah, formatDate, getPaymentStatusLabel } from '@/lib/utils'
@@ -66,7 +66,7 @@ export default function EventDetailPage() {
 
   // Import State
   const [importing, setImporting] = useState(false)
-  const fileInputRef = React.useRef<HTMLInputElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -82,7 +82,7 @@ export default function EventDetailPage() {
         const { data: installs } = await supabase.from('installments').select('*').eq('participant_id', p.id).order('payment_date', { ascending: true })
         const installments = (installs ?? []) as Installment[]
         const totalPaid = installments.reduce((s, i) => s + Number(i.amount), 0)
-        return { ...p, installments, totalPaid, remaining: 0 }
+        return { ...p, installments, totalPaid, remaining: 0, activeTarget: 0 }
       })
     )
     // Compute remaining after we have event target
