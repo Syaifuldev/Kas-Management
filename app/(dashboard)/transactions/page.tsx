@@ -105,7 +105,8 @@ export default function TransactionsPage() {
 
   const handleExportPDF = () => {
     if (!activeKas) return
-    exportTransactionsPDF(filtered, activeKas.name)
+    const note = `Laporan transaksi kas "${activeKas.name}" per tanggal ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}. Data bersumber dari sistem Kas Management.`
+    exportTransactionsPDF(filtered, activeKas.name, note)
   }
 
   const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {

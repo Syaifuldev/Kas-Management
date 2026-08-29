@@ -204,7 +204,8 @@ export default function EventDetailPage() {
   // Import / Export Handlers
   const handleExportPDF = () => {
     if (!event) return
-    exportParticipantsPDF(participants, event.name, event.target_amount_per_person)
+    const note = `Biaya default per orang: ${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(event.target_amount_per_person)}. Peserta dengan biaya berbeda ditandai secara khusus.`
+    exportParticipantsPDF(participants, event.name, event.target_amount_per_person, note)
   }
 
   const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {

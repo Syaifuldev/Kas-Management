@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useKas } from '@/lib/context/KasContext'
 import type { Organization } from '@/types'
-import { ChevronDown, Plus, Check, Building2, Loader2 } from 'lucide-react'
+import { ChevronDown, Plus, Check, Building2, Loader2, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 export default function KasSwitcher() {
@@ -15,6 +15,7 @@ export default function KasSwitcher() {
   const [newName, setNewName] = useState('')
   const [newDesc, setNewDesc] = useState('')
   const [saving, setSaving] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -56,6 +57,36 @@ export default function KasSwitcher() {
     setSaving(false)
   }
 
+  const handleDelete = async (org: Organization, e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!confirm(`Hapus kas "${org.name}"?\n\nSemua transaksi dan event di dalam kas ini akan ikut terhapus secara permanen.`)) return
+
+    setDeletingId(org.id)
+
+    const { error } = await supabase
+      .from('organizations')
+      .delete()
+      .eq('id', org.id)
+
+    if (error) {
+      toast.error('Gagal menghapus kas: ' + error.message)
+      setDeletingId(null)
+      return
+    }
+
+    const updated = organizations.filter(o => o.id !== org.id)
+    setOrganizations(updated)
+
+    // Jika kas yang dihapus adalah kas aktif, ganti ke kas lain
+    if (activeKas?.id === org.id) {
+      setActiveKas(updated[0] ?? null)
+    }
+
+    toast.success(`Kas "${org.name}" berhasil dihapus`)
+    setDeletingId(null)
+    if (updated.length === 0) setOpen(false)
+  }
+
   return (
     <div className="relative" ref={ref}>
       <button
@@ -81,17 +112,35 @@ export default function KasSwitcher() {
               <p className="text-xs text-center py-3" style={{ color: 'rgba(255,255,255,0.3)' }}>Belum ada kas</p>
             )}
             {organizations.map(org => (
-              <button
+              <div
                 key={org.id}
-                onClick={() => { setActiveKas(org); setOpen(false) }}
-                className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-left transition-all hover:bg-white/5"
+                className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-left transition-all hover:bg-white/5 group"
               >
-                <div className="w-6 h-6 rounded-md flex items-center justify-center" style={{ background: 'rgba(99,102,241,0.2)' }}>
-                  <Building2 size={11} style={{ color: '#818cf8' }} />
-                </div>
-                <span className="flex-1 text-sm truncate text-slate-200">{org.name}</span>
-                {activeKas?.id === org.id && <Check size={13} style={{ color: '#818cf8' }} />}
-              </button>
+                <button
+                  className="flex items-center gap-2.5 flex-1 min-w-0"
+                  onClick={() => { setActiveKas(org); setOpen(false) }}
+                >
+                  <div className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(99,102,241,0.2)' }}>
+                    <Building2 size={11} style={{ color: '#818cf8' }} />
+                  </div>
+                  <span className="flex-1 text-sm truncate text-slate-200">{org.name}</span>
+                  {activeKas?.id === org.id && <Check size={13} style={{ color: '#818cf8' }} />}
+                </button>
+
+                {/* Tombol hapus — muncul saat hover */}
+                <button
+                  onClick={(e) => handleDelete(org, e)}
+                  disabled={deletingId === org.id}
+                  className="opacity-0 group-hover:opacity-100 p-1 rounded-md transition-all hover:bg-red-500/20 flex-shrink-0"
+                  style={{ color: 'rgba(248,113,113,0.7)' }}
+                  title="Hapus kas ini"
+                >
+                  {deletingId === org.id
+                    ? <Loader2 size={12} className="animate-spin" />
+                    : <Trash2 size={12} />
+                  }
+                </button>
+              </div>
             ))}
           </div>
 

@@ -3,166 +3,259 @@ import autoTable from 'jspdf-autotable'
 import * as xlsx from 'xlsx'
 import { formatRupiah, formatDate } from './utils'
 
-// ==========================================
-// EXPORT PDF
-// ==========================================
+// ─────────────────────────────────────────
+// Shared PDF Header & Footer
+// ─────────────────────────────────────────
 
-export function exportTransactionsPDF(transactions: any[], kasName: string) {
+function drawPDFHeader(doc: jsPDF, title: string, subtitle: string) {
+  const pageW = doc.internal.pageSize.getWidth()
+
+  // Background header bar
+  doc.setFillColor(30, 27, 75) // deep indigo
+  doc.rect(0, 0, pageW, 42, 'F')
+
+  // Accent stripe
+  doc.setFillColor(99, 102, 241) // indigo-500
+  doc.rect(0, 40, pageW, 3, 'F')
+
+  // App branding (left)
+  doc.setFontSize(9)
+  doc.setTextColor(148, 163, 184) // slate-400
+  doc.text('KAS MANAGEMENT', 14, 14)
+
+  // Title (large)
+  doc.setFontSize(18)
+  doc.setFont('helvetica', 'bold')
+  doc.setTextColor(255, 255, 255)
+  doc.text(title, 14, 27)
+
+  // Subtitle (right)
+  doc.setFontSize(8)
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(165, 180, 252) // indigo-300
+  doc.text(subtitle, pageW - 14, 20, { align: 'right' })
+
+  // Print date (right)
+  doc.setTextColor(148, 163, 184)
+  doc.text(`Dicetak: ${formatDate(new Date().toISOString().split('T')[0])}`, pageW - 14, 29, { align: 'right' })
+}
+
+function drawPDFFooter(doc: jsPDF, note?: string) {
+  const pageW = doc.internal.pageSize.getWidth()
+  const pageH = doc.internal.pageSize.getHeight()
+
+  // Footer divider
+  doc.setDrawColor(99, 102, 241)
+  doc.setLineWidth(0.5)
+  doc.line(14, pageH - 22, pageW - 14, pageH - 22)
+
+  // Note text
+  if (note) {
+    doc.setFontSize(7.5)
+    doc.setFont('helvetica', 'italic')
+    doc.setTextColor(148, 163, 184)
+    doc.text(`Catatan: ${note}`, 14, pageH - 15)
+  }
+
+  // Footer right: page number
+  doc.setFontSize(7.5)
+  doc.setFont('helvetica', 'normal')
+  doc.setTextColor(148, 163, 184)
+  doc.text('© Syaiful Dev – Kas Management', pageW - 14, pageH - 15, { align: 'right' })
+}
+
+// ─────────────────────────────────────────
+// EXPORT PDF: TRANSAKSI BUKU KAS
+// ─────────────────────────────────────────
+
+export function exportTransactionsPDF(transactions: any[], kasName: string, note?: string) {
   const doc = new jsPDF()
-  
-  doc.setFontSize(16)
-  doc.text(`Laporan Buku Kas - ${kasName}`, 14, 15)
-  doc.setFontSize(10)
-  doc.text(`Tanggal Cetak: ${formatDate(new Date().toISOString().split('T')[0])}`, 14, 22)
 
-  const tableColumn = ["No", "Tanggal", "Tipe", "Kategori", "Keterangan", "Nominal"]
+  drawPDFHeader(doc, 'Laporan Buku Kas', kasName)
+
+  const tableColumn = ['No', 'Tanggal', 'Tipe', 'Kategori', 'Keterangan', 'Nominal']
 
   let totalIncome = 0
   let totalExpense = 0
 
-  const tableRows = transactions.map((t, idx) => {
+  const tableRows: any[] = transactions.map((t, idx) => {
     const amount = Number(t.amount)
     if (t.type === 'income') totalIncome += amount
     else totalExpense += amount
-
     return [
       idx + 1,
       formatDate(t.date),
-      t.type === 'income' ? 'Pemasukan' : 'Pengeluaran',
+      t.type === 'income' ? '▲ Masuk' : '▼ Keluar',
       t.category || '-',
       t.description || '-',
-      (t.type === 'income' ? '+' : '-') + formatRupiah(amount)
+      (t.type === 'income' ? '+' : '-') + formatRupiah(amount),
     ]
   })
 
-  // Total rows
+  // Summary rows
   tableRows.push(
-    ['', '', '', '', 'Total Pemasukan', formatRupiah(totalIncome)],
-    ['', '', '', '', 'Total Pengeluaran', formatRupiah(totalExpense)],
-    ['', '', '', '', 'Saldo Akhir', formatRupiah(totalIncome - totalExpense)]
+    [{ content: '', colSpan: 5, styles: { fillColor: [20, 20, 40] } }, ''],
+    [{ content: 'Total Pemasukan', colSpan: 5, styles: { halign: 'right', fontStyle: 'bold', fillColor: [20, 30, 50], textColor: [74, 222, 128] } }, { content: formatRupiah(totalIncome), styles: { fontStyle: 'bold', textColor: [74, 222, 128], fillColor: [20, 30, 50] } }],
+    [{ content: 'Total Pengeluaran', colSpan: 5, styles: { halign: 'right', fontStyle: 'bold', fillColor: [20, 30, 50], textColor: [248, 113, 113] } }, { content: formatRupiah(totalExpense), styles: { fontStyle: 'bold', textColor: [248, 113, 113], fillColor: [20, 30, 50] } }],
+    [{ content: 'Saldo Akhir', colSpan: 5, styles: { halign: 'right', fontStyle: 'bold', fillColor: [40, 30, 80], textColor: [165, 180, 252] } }, { content: formatRupiah(totalIncome - totalExpense), styles: { fontStyle: 'bold', textColor: [165, 180, 252], fillColor: [40, 30, 80] } }],
   )
 
   autoTable(doc, {
     head: [tableColumn],
     body: tableRows,
-    startY: 28,
-    styles: { fontSize: 9 },
-    headStyles: { fillColor: [99, 102, 241] },
-    didParseCell: (data) => {
-      const totalRowStart = tableRows.length - 3
-      if (data.row.index >= totalRowStart) {
-        data.cell.styles.fontStyle = 'bold'
-        data.cell.styles.fillColor = [30, 30, 50]
-      }
-    }
+    startY: 50,
+    styles: {
+      fontSize: 8.5,
+      cellPadding: { top: 4, bottom: 4, left: 5, right: 5 },
+      textColor: [30, 30, 30],
+    },
+    headStyles: {
+      fillColor: [99, 102, 241],
+      textColor: [255, 255, 255],
+      fontStyle: 'bold',
+      fontSize: 8.5,
+    },
+    alternateRowStyles: { fillColor: [248, 249, 255] },
+    columnStyles: {
+      0: { cellWidth: 10, halign: 'center' },
+      1: { cellWidth: 24 },
+      2: { cellWidth: 20 },
+      3: { cellWidth: 25 },
+      5: { halign: 'right', cellWidth: 32 },
+    },
+    margin: { left: 14, right: 14 },
+    tableLineColor: [220, 220, 240],
+    tableLineWidth: 0.1,
   })
 
-  doc.save(`Laporan_Kas_${kasName.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`)
+  drawPDFFooter(doc, note ?? 'Laporan ini digenerate secara otomatis oleh sistem Kas Management.')
+
+  doc.save(`Laporan_Kas_${kasName.replace(/\s+/g, '_')}_${Date.now()}.pdf`)
 }
 
-export function exportParticipantsPDF(participants: any[], eventName: string, defaultCost: number) {
-  const doc = new jsPDF()
-  
-  doc.setFontSize(16)
-  doc.text(`Laporan Peserta Event - ${eventName}`, 14, 15)
-  doc.setFontSize(10)
-  doc.text(`Tanggal Cetak: ${formatDate(new Date().toISOString().split('T')[0])}`, 14, 22)
+// ─────────────────────────────────────────
+// EXPORT PDF: PESERTA EVENT
+// ─────────────────────────────────────────
 
-  const tableColumn = ["No", "Nama", "Status", "Target Biaya", "Telah Dibayar", "Sisa"]
+export function exportParticipantsPDF(participants: any[], eventName: string, defaultCost: number, note?: string) {
+  const doc = new jsPDF()
+
+  drawPDFHeader(doc, 'Laporan Peserta Event', eventName)
+
+  const tableColumn = ['No', 'Nama Peserta', 'Status', 'Target Biaya', 'Telah Dibayar', 'Sisa']
 
   let grandTotalTarget = 0
   let grandTotalPaid = 0
   let grandTotalRemaining = 0
 
-  const tableRows = participants.map((p, idx) => {
+  const tableRows: any[] = participants.map((p, idx) => {
     const target = p.target_amount ?? defaultCost
     const remaining = Math.max(0, target - p.totalPaid)
     let statusLabel = 'Belum Bayar'
-    if (p.payment_status === 'paid') statusLabel = 'Lunas'
-    else if (p.payment_status === 'partial') statusLabel = 'Mencicil'
+    if (p.payment_status === 'paid') statusLabel = '✓ Lunas'
+    else if (p.payment_status === 'partial') statusLabel = '~ Mencicil'
 
     grandTotalTarget += target
     grandTotalPaid += p.totalPaid
     grandTotalRemaining += remaining
 
-    return [
-      idx + 1,
-      p.name,
-      statusLabel,
-      formatRupiah(target),
-      formatRupiah(p.totalPaid),
-      formatRupiah(remaining)
-    ]
+    return [idx + 1, p.name, statusLabel, formatRupiah(target), formatRupiah(p.totalPaid), formatRupiah(remaining)]
   })
 
-  // Total row
-  tableRows.push([
-    '',
-    'TOTAL',
-    `${participants.filter(p => p.payment_status === 'paid').length} Lunas / ${participants.length} Orang`,
-    formatRupiah(grandTotalTarget),
-    formatRupiah(grandTotalPaid),
-    formatRupiah(grandTotalRemaining)
-  ])
+  const paidCount = participants.filter(p => p.payment_status === 'paid').length
+  const partialCount = participants.filter(p => p.payment_status === 'partial').length
+  const unpaidCount = participants.filter(p => p.payment_status === 'unpaid').length
+
+  // Summary rows
+  tableRows.push(
+    [{ content: '', colSpan: 6, styles: { fillColor: [20, 20, 40] } }],
+    [
+      { content: `Total (${participants.length} Peserta: ${paidCount} Lunas, ${partialCount} Mencicil, ${unpaidCount} Belum Bayar)`, colSpan: 3, styles: { fontStyle: 'bold', fillColor: [40, 30, 80], textColor: [165, 180, 252] } },
+      { content: formatRupiah(grandTotalTarget), styles: { fontStyle: 'bold', halign: 'right', fillColor: [40, 30, 80], textColor: [165, 180, 252] } },
+      { content: formatRupiah(grandTotalPaid), styles: { fontStyle: 'bold', halign: 'right', fillColor: [40, 30, 80], textColor: [74, 222, 128] } },
+      { content: formatRupiah(grandTotalRemaining), styles: { fontStyle: 'bold', halign: 'right', fillColor: [40, 30, 80], textColor: [248, 113, 113] } },
+    ],
+  )
 
   autoTable(doc, {
     head: [tableColumn],
     body: tableRows,
-    startY: 28,
-    styles: { fontSize: 9 },
-    headStyles: { fillColor: [99, 102, 241] },
-    // Style for total row
+    startY: 50,
+    styles: {
+      fontSize: 8.5,
+      cellPadding: { top: 4, bottom: 4, left: 5, right: 5 },
+      textColor: [30, 30, 30],
+    },
+    headStyles: {
+      fillColor: [99, 102, 241],
+      textColor: [255, 255, 255],
+      fontStyle: 'bold',
+      fontSize: 8.5,
+    },
+    alternateRowStyles: { fillColor: [248, 249, 255] },
+    columnStyles: {
+      0: { cellWidth: 10, halign: 'center' },
+      2: { cellWidth: 24, halign: 'center' },
+      3: { halign: 'right' },
+      4: { halign: 'right' },
+      5: { halign: 'right' },
+    },
+    margin: { left: 14, right: 14 },
+    tableLineColor: [220, 220, 240],
+    tableLineWidth: 0.1,
     didParseCell: (data) => {
-      if (data.row.index === tableRows.length - 1) {
-        data.cell.styles.fontStyle = 'bold'
-        data.cell.styles.fillColor = [30, 30, 50]
+      // Colour code status
+      if (data.column.index === 2 && data.section === 'body' && typeof data.cell.raw === 'string') {
+        if ((data.cell.raw as string).includes('Lunas')) {
+          data.cell.styles.textColor = [21, 128, 61]
+          data.cell.styles.fontStyle = 'bold'
+        } else if ((data.cell.raw as string).includes('Mencicil')) {
+          data.cell.styles.textColor = [161, 98, 7]
+        }
       }
-    }
+    },
   })
 
-  doc.save(`Peserta_${eventName.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`)
+  drawPDFFooter(doc, note ?? 'Laporan ini digenerate secara otomatis oleh sistem Kas Management.')
+
+  doc.save(`Peserta_${eventName.replace(/\s+/g, '_')}_${Date.now()}.pdf`)
 }
 
-// ==========================================
+// ─────────────────────────────────────────
 // EXPORT EXCEL TEMPLATE
-// ==========================================
+// ─────────────────────────────────────────
 
 export function downloadTransactionsTemplate() {
   const wb = xlsx.utils.book_new()
   const wsData = [
-    ["type", "amount", "category", "description", "date"],
-    ["income", 500000, "Donasi", "Donasi Hamba Allah", "2023-12-01"],
-    ["expense", 150000, "Konsumsi", "Beli air mineral", "2023-12-02"],
-    ["", "", "", "HAPUS BARIS CONTOH INI SEBELUM IMPORT", ""]
+    ['type', 'amount', 'category', 'description', 'date'],
+    ['income', 500000, 'Donasi', 'Donasi Hamba Allah', '2024-01-01'],
+    ['expense', 150000, 'Konsumsi', 'Beli air mineral', '2024-01-02'],
+    ['', '', '', 'HAPUS BARIS CONTOH INI SEBELUM IMPORT', ''],
   ]
   const ws = xlsx.utils.aoa_to_sheet(wsData)
-  
-  // Set column widths
-  ws['!cols'] = [{wch: 10}, {wch: 15}, {wch: 20}, {wch: 30}, {wch: 12}]
-  
-  xlsx.utils.book_append_sheet(wb, ws, "Transactions")
-  xlsx.writeFile(wb, "Template_Import_Transaksi.xlsx")
+  ws['!cols'] = [{ wch: 10 }, { wch: 15 }, { wch: 20 }, { wch: 30 }, { wch: 12 }]
+  xlsx.utils.book_append_sheet(wb, ws, 'Transactions')
+  xlsx.writeFile(wb, 'Template_Import_Transaksi.xlsx')
 }
 
 export function downloadParticipantsTemplate() {
   const wb = xlsx.utils.book_new()
   const wsData = [
-    ["name", "target_amount"],
-    ["Budi Santoso", ""],
-    ["Andi (Biaya Khusus)", 150000],
-    ["", "HAPUS BARIS CONTOH INI SEBELUM IMPORT"]
+    ['name', 'target_amount'],
+    ['Budi Santoso', ''],
+    ['Andi (Biaya Khusus)', 150000],
+    ['', 'HAPUS BARIS CONTOH INI SEBELUM IMPORT'],
   ]
   const ws = xlsx.utils.aoa_to_sheet(wsData)
-  
-  ws['!cols'] = [{wch: 30}, {wch: 20}]
-  
-  xlsx.utils.book_append_sheet(wb, ws, "Participants")
-  xlsx.writeFile(wb, "Template_Import_Peserta.xlsx")
+  ws['!cols'] = [{ wch: 30 }, { wch: 20 }]
+  xlsx.utils.book_append_sheet(wb, ws, 'Participants')
+  xlsx.writeFile(wb, 'Template_Import_Peserta.xlsx')
 }
 
-// ==========================================
+// ─────────────────────────────────────────
 // PARSE EXCEL IMPORT
-// ==========================================
+// ─────────────────────────────────────────
 
 export async function parseExcel(file: File): Promise<any[]> {
   return new Promise((resolve, reject) => {
