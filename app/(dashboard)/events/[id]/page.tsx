@@ -208,7 +208,7 @@ export default function EventDetailPage() {
     setExporting(true)
     try {
       const note = `Biaya default per orang: ${new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(event.target_amount_per_person)}. Peserta dengan biaya berbeda ditandai secara khusus.`
-      await exportParticipantsPDF(participants, event.name, event.target_amount_per_person, note)
+      await exportParticipantsPDF(participants, event.name, event.description, event.event_date, event.target_amount_per_person, note)
       toast.success('Laporan PDF berhasil di-generate')
     } catch (err: any) {
       toast.error('Gagal men-generate PDF: ' + err.message)

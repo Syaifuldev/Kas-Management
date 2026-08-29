@@ -23,6 +23,7 @@ export default function LoginPage() {
     if (error) {
       toast.error('Login gagal: ' + error.message)
     } else {
+      toast.success('Berhasil masuk!')
       router.push('/')
       router.refresh()
     }
@@ -119,6 +120,19 @@ export default function LoginPage() {
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
+            </div>
+
+            {/* Remember Me */}
+            <div className="flex items-center">
+              <input
+                id="remember_me"
+                name="remember_me"
+                type="checkbox"
+                className="h-4 w-4 rounded border-gray-600 bg-gray-700 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-gray-900"
+              />
+              <label htmlFor="remember_me" className="ml-2 block text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                Simpan password (Ingat saya)
+              </label>
             </div>
 
             {/* Submit */}

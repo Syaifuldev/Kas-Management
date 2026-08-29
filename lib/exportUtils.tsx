@@ -22,11 +22,13 @@ export async function exportTransactionsPDF(transactions: any[], kasName: string
   URL.revokeObjectURL(url)
 }
 
-export async function exportParticipantsPDF(participants: any[], eventName: string, defaultCost: number, note?: string) {
+export async function exportParticipantsPDF(participants: any[], eventName: string, eventDescription: string | undefined, eventDate: string | undefined, defaultCost: number, note?: string) {
   const blob = await pdf(
     // @ts-ignore
     <EventPDF 
-      eventName={eventName} 
+      eventName={eventName}
+      eventDescription={eventDescription}
+      eventDate={eventDate}
       participants={participants} 
       defaultCost={defaultCost} 
       note={note} 

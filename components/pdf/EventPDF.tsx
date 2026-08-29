@@ -208,8 +208,7 @@ export const EventPDF = ({ eventName, eventDescription, eventDate, participants,
         {/* Header (Like UI) */}
         <View style={styles.headerContainer}>
           <View style={styles.headerLeft}>
-            <Text style={styles.brandText}>KAS MANAGEMENT</Text>
-            <Text style={{...styles.title, marginTop: 8}}>{eventName}</Text>
+            <Text style={{...styles.title}}>{eventName}</Text>
             {eventDescription && <Text style={styles.subtitle}>{eventDescription}</Text>}
             {eventDate && (
               <View style={{ alignSelf: 'flex-start' }}>
