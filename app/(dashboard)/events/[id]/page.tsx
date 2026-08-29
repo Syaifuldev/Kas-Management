@@ -148,6 +148,17 @@ export default function EventDetailPage() {
     else { toast.success(`${name} dihapus`); load() }
   }
 
+  const handleBulkDelete = async () => {
+    if (!confirm(`Peringatan: Anda akan menghapus SEMUA peserta di event ini beserta riwayat pembayarannya. Apakah Anda yakin?`)) return
+    
+    // Check if user really wants it by an extra confirmation or just one is fine
+    if (!confirm('Tindakan ini tidak bisa dibatalkan. Lanjutkan?')) return
+
+    const { error } = await supabase.from('event_participants').delete().eq('event_id', eventId)
+    if (error) toast.error('Gagal menghapus semua peserta: ' + error.message)
+    else { toast.success('Semua peserta berhasil dihapus'); load() }
+  }
+
   // Installment CRUD
   const openAddInstallment = (participantId: string) => {
     setActiveParticipantId(participantId)
@@ -339,6 +350,13 @@ export default function EventDetailPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
         <h2 className="text-base font-bold" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Daftar Peserta</h2>
         <div className="flex flex-wrap items-center gap-2">
+          
+          {participants.length > 0 && (
+            <button onClick={handleBulkDelete} className="btn-secondary text-sm py-2 px-3 flex items-center gap-1 text-red-400 hover:text-red-300 hover:bg-red-950/30" title="Hapus Semua Peserta">
+              <Trash2 size={14} /> Hapus Semua
+            </button>
+          )}
+
           <button onClick={handleExportPDF} disabled={exporting} className="btn-secondary text-sm py-2 px-3 flex items-center gap-1">
             {exporting ? <Loader2 size={14} className="animate-spin" /> : <FileDown size={14} />} PDF
           </button>
