@@ -229,8 +229,8 @@ export const KasPDF = ({ kasName, transactions, note }: KasPDFProps) => {
 
         {/* Footer */}
         <View style={styles.footer} fixed>
-          <Text style={styles.footerNote}>Catatan: {note ?? 'Laporan otomatis dari Kas Management.'}</Text>
-          <Text style={styles.footerBrand}>© Syaiful Dev - Kas Management</Text>
+          <Text style={styles.footerNote}>Catatan: {note ?? 'Laporan otomatis dari Setor Kene.'}</Text>
+          <Text style={styles.footerBrand}>© Syaiful Dev - Setor Kene</Text>
         </View>
 
       </Page>

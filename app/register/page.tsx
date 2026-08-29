@@ -46,7 +46,7 @@ export default function RegisterPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4" style={{ background: 'linear-gradient(135deg, #6366f1, #a855f7)' }}>
             <Wallet size={28} color="white" />
           </div>
-          <h1 className="text-2xl font-bold gradient-text">Kas Management</h1>
+          <h1 className="text-2xl font-bold gradient-text">Setor Kene</h1>
           <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>Buat akun baru</p>
         </div>
 

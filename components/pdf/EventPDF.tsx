@@ -220,7 +220,7 @@ export const EventPDF = ({ eventName, eventDescription, eventDate, participants,
             )}
           </View>
           <View style={styles.headerRight}>
-            <Text style={styles.brandText}>Laporan Peserta</Text>
+            <Text style={styles.brandText}>SETOR KENE</Text>
             <Text style={styles.printDate}>Dicetak: {formatDate(new Date().toISOString().split('T')[0])}</Text>
           </View>
         </View>
@@ -285,8 +285,8 @@ export const EventPDF = ({ eventName, eventDescription, eventDate, participants,
 
         {/* Footer */}
         <View style={styles.footer} fixed>
-          <Text style={styles.footerNote}>Catatan: {note ?? 'Laporan otomatis dari Kas Management.'}</Text>
-          <Text style={styles.footerBrand}>© Syaiful Dev - Kas Management</Text>
+          <Text style={styles.footerNote}>Catatan: {note ?? 'Laporan otomatis dari Setor Kene.'}</Text>
+          <Text style={styles.footerBrand}>© Syaiful Dev - Setor Kene</Text>
         </View>
 
       </Page>

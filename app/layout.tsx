@@ -3,8 +3,8 @@ import './globals.css'
 import { Toaster } from 'sonner'
 
 export const metadata: Metadata = {
-  title: 'Kas Management — Pencatatan Keuangan & Event',
-  description: 'Aplikasi pencatatan keuangan multi-kas dan pembayaran event dengan sistem cicilan untuk bendahara organisasi.',
+  title: 'Setor Kene — Pencatatan Keuangan & Event',
+  description: 'Aplikasi pencatatan kas dan event modern',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

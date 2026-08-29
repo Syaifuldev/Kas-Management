@@ -39,7 +39,7 @@ export default function Sidebar() {
             <Wallet size={17} color="white" />
           </div>
           <div>
-            <p className="text-sm font-bold" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Kas Management</p>
+            <p className="text-sm font-bold" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Setor Kene</p>
             <p className="text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>Kelola keuangan Anda</p>
           </div>
         </div>
@@ -104,7 +104,7 @@ export default function Sidebar() {
           <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg,#6366f1,#a855f7)' }}>
             <Wallet size={15} color="white" />
           </div>
-          <span className="text-sm font-bold" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Kas Management</span>
+          <span className="text-sm font-bold" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Setor Kene</span>
         </div>
         <button onClick={() => setMobileOpen(!mobileOpen)} className="p-2 rounded-lg hover:bg-white/5">
           {mobileOpen ? <X size={20} /> : <Menu size={20} />}

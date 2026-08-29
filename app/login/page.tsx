@@ -48,7 +48,7 @@ export default function LoginPage() {
             <Wallet size={28} color="white" />
           </div>
           <h1 className="text-3xl font-bold gradient-text" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-            Kas Management
+            Setor Kene
           </h1>
           <p className="text-sm mt-2" style={{ color: 'rgba(255,255,255,0.4)' }}>
             Masuk untuk mengelola keuangan Anda

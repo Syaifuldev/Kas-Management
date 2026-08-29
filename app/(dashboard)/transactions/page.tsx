@@ -108,7 +108,7 @@ export default function TransactionsPage() {
     if (!activeKas) return
     setExporting(true)
     try {
-      const note = `Laporan transaksi kas "${activeKas.name}" per tanggal ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}. Data bersumber dari sistem Kas Management.`
+      const note = `Laporan transaksi kas "${activeKas.name}" per tanggal ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}. Data bersumber dari sistem Setor Kene.`
       await exportTransactionsPDF(filtered, activeKas.name, note)
       toast.success('Laporan PDF berhasil di-generate')
     } catch (err: any) {
