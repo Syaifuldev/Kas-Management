@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import Link from 'next/link'
+import { ConfirmModal } from '@/components/ui/ConfirmModal'
 
 interface ParticipantWithData extends EventParticipant {
   installments: Installment[]
@@ -50,6 +51,7 @@ export default function EventDetailPage() {
   const [loading, setLoading] = useState(true)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [confirmState, setConfirmState] = useState<{ isOpen: boolean, message: string, onConfirm: () => void } | null>(null)
 
   // Participant modal
   const [showParticipantModal, setShowParticipantModal] = useState(false)
@@ -142,22 +144,28 @@ export default function EventDetailPage() {
     setSavingParticipant(false)
   }
 
-  const handleDeleteParticipant = async (id: string, name: string) => {
-    if (!confirm(`Hapus peserta "${name}"? Riwayat cicilannya juga akan terhapus.`)) return
-    const { error } = await supabase.from('event_participants').delete().eq('id', id)
-    if (error) toast.error('Gagal menghapus')
-    else { toast.success(`${name} dihapus`); load() }
+  const handleDeleteParticipant = (id: string, name: string) => {
+    setConfirmState({
+      isOpen: true,
+      message: `Hapus peserta "${name}"? Riwayat cicilannya juga akan terhapus.`,
+      onConfirm: async () => {
+        const { error } = await supabase.from('event_participants').delete().eq('id', id)
+        if (error) toast.error('Gagal menghapus')
+        else { toast.success(`${name} dihapus`); load() }
+      }
+    })
   }
 
-  const handleBulkDelete = async () => {
-    if (!confirm(`Peringatan: Anda akan menghapus SEMUA peserta di event ini beserta riwayat pembayarannya. Apakah Anda yakin?`)) return
-    
-    // Check if user really wants it by an extra confirmation or just one is fine
-    if (!confirm('Tindakan ini tidak bisa dibatalkan. Lanjutkan?')) return
-
-    const { error } = await supabase.from('event_participants').delete().eq('event_id', eventId)
-    if (error) toast.error('Gagal menghapus semua peserta: ' + error.message)
-    else { toast.success('Semua peserta berhasil dihapus'); load() }
+  const handleBulkDelete = () => {
+    setConfirmState({
+      isOpen: true,
+      message: 'Peringatan: Anda akan menghapus SEMUA peserta beserta riwayat pembayarannya. Tindakan ini tidak bisa dibatalkan. Lanjutkan?',
+      onConfirm: async () => {
+        const { error } = await supabase.from('event_participants').delete().eq('event_id', eventId)
+        if (error) toast.error('Gagal menghapus semua peserta: ' + error.message)
+        else { toast.success('Semua peserta berhasil dihapus'); load() }
+      }
+    })
   }
 
   // Installment CRUD
@@ -202,16 +210,22 @@ export default function EventDetailPage() {
     setSavingInstallment(false)
   }
 
-  const handleDeleteInstallment = async (installId: string, participantId: string) => {
-    if (!confirm('Hapus catatan cicilan ini?') || !event) return
-    await supabase.from('installments').delete().eq('id', installId)
-    const { data: allInstalls } = await supabase.from('installments').select('amount').eq('participant_id', participantId)
-    const total = (allInstalls ?? []).reduce((s: number, i: { amount: number }) => s + Number(i.amount), 0)
-    const participant = participants.find(p => p.id === participantId)
-    const target = participant?.target_amount ?? event.target_amount_per_person
-    await updatePaymentStatus(participantId, total, target)
-    toast.success('Cicilan dihapus')
-    load()
+  const handleDeleteInstallment = (installId: string, participantId: string) => {
+    if (!event) return
+    setConfirmState({
+      isOpen: true,
+      message: 'Hapus catatan cicilan ini?',
+      onConfirm: async () => {
+        await supabase.from('installments').delete().eq('id', installId)
+        const { data: allInstalls } = await supabase.from('installments').select('amount').eq('participant_id', participantId)
+        const total = (allInstalls ?? []).reduce((s: number, i: { amount: number }) => s + Number(i.amount), 0)
+        const participant = participants.find(p => p.id === participantId)
+        const target = participant?.target_amount ?? event.target_amount_per_person
+        await updatePaymentStatus(participantId, total, target)
+        toast.success('Cicilan dihapus')
+        load()
+      }
+    })
   }
 
   // Import / Export Handlers
@@ -598,6 +612,16 @@ export default function EventDetailPage() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Confirm Modal */}
+      {confirmState && (
+        <ConfirmModal
+          isOpen={confirmState.isOpen}
+          message={confirmState.message}
+          onConfirm={confirmState.onConfirm}
+          onCancel={() => setConfirmState(null)}
+        />
       )}
     </div>
   )

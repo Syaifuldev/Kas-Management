@@ -10,6 +10,7 @@ import type { Event } from '@/types'
 import { Plus, CalendarDays, Pencil, Trash2, X, Loader2, CheckCircle2, Clock } from 'lucide-react'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import { ConfirmModal } from '@/components/ui/ConfirmModal'
 
 interface FormData {
   name: string
@@ -31,6 +32,7 @@ export default function EventsPage() {
   const [form, setForm] = useState<FormData>(defaultForm)
   const [saving, setSaving] = useState(false)
   const [participantCount, setParticipantCount] = useState<Record<string, number>>({})
+  const [confirmState, setConfirmState] = useState<{ isOpen: boolean, message: string, onConfirm: () => void } | null>(null)
 
   const load = useCallback(async () => {
     if (!activeKas) return
@@ -76,11 +78,16 @@ export default function EventsPage() {
     setSaving(false)
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Hapus event ini? Semua peserta dan cicilan akan ikut terhapus.')) return
-    const { error } = await supabase.from('events').delete().eq('id', id)
-    if (error) toast.error('Gagal menghapus')
-    else { toast.success('Event dihapus'); load() }
+  const handleDelete = (id: string) => {
+    setConfirmState({
+      isOpen: true,
+      message: 'Hapus event ini? Semua peserta dan cicilan akan ikut terhapus.',
+      onConfirm: async () => {
+        const { error } = await supabase.from('events').delete().eq('id', id)
+        if (error) toast.error('Gagal menghapus')
+        else { toast.success('Event dihapus'); load() }
+      }
+    })
   }
 
   return (
@@ -195,6 +202,16 @@ export default function EventsPage() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Confirm Modal */}
+      {confirmState && (
+        <ConfirmModal
+          isOpen={confirmState.isOpen}
+          message={confirmState.message}
+          onConfirm={confirmState.onConfirm}
+          onCancel={() => setConfirmState(null)}
+        />
       )}
     </div>
   )

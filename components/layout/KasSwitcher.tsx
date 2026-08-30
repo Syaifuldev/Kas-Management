@@ -6,6 +6,7 @@ import { useKas } from '@/lib/context/KasContext'
 import type { Organization } from '@/types'
 import { ChevronDown, Plus, Check, Building2, Loader2, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { ConfirmModal } from '@/components/ui/ConfirmModal'
 
 export default function KasSwitcher() {
   const supabase = createClient()
@@ -16,6 +17,7 @@ export default function KasSwitcher() {
   const [newDesc, setNewDesc] = useState('')
   const [saving, setSaving] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [confirmState, setConfirmState] = useState<{ isOpen: boolean, message: string, onConfirm: () => void } | null>(null)
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -57,34 +59,38 @@ export default function KasSwitcher() {
     setSaving(false)
   }
 
-  const handleDelete = async (org: Organization, e: React.MouseEvent) => {
+  const handleDelete = (org: Organization, e: React.MouseEvent) => {
     e.stopPropagation()
-    if (!confirm(`Hapus kas "${org.name}"?\n\nSemua transaksi dan event di dalam kas ini akan ikut terhapus secara permanen.`)) return
+    setConfirmState({
+      isOpen: true,
+      message: `Hapus kas "${org.name}"?\n\nSemua transaksi dan event di dalam kas ini akan ikut terhapus secara permanen.`,
+      onConfirm: async () => {
+        setDeletingId(org.id)
 
-    setDeletingId(org.id)
+        const { error } = await supabase
+          .from('organizations')
+          .delete()
+          .eq('id', org.id)
 
-    const { error } = await supabase
-      .from('organizations')
-      .delete()
-      .eq('id', org.id)
+        if (error) {
+          toast.error('Gagal menghapus kas: ' + error.message)
+          setDeletingId(null)
+          return
+        }
 
-    if (error) {
-      toast.error('Gagal menghapus kas: ' + error.message)
-      setDeletingId(null)
-      return
-    }
+        const updated = organizations.filter(o => o.id !== org.id)
+        setOrganizations(updated)
 
-    const updated = organizations.filter(o => o.id !== org.id)
-    setOrganizations(updated)
+        // Jika kas yang dihapus adalah kas aktif, ganti ke kas lain
+        if (activeKas?.id === org.id) {
+          setActiveKas(updated[0] ?? null)
+        }
 
-    // Jika kas yang dihapus adalah kas aktif, ganti ke kas lain
-    if (activeKas?.id === org.id) {
-      setActiveKas(updated[0] ?? null)
-    }
-
-    toast.success(`Kas "${org.name}" berhasil dihapus`)
-    setDeletingId(null)
-    if (updated.length === 0) setOpen(false)
+        toast.success(`Kas "${org.name}" berhasil dihapus`)
+        setDeletingId(null)
+        if (updated.length === 0) setOpen(false)
+      }
+    })
   }
 
   return (
@@ -180,6 +186,16 @@ export default function KasSwitcher() {
             )}
           </div>
         </div>
+      )}
+
+      {/* Confirm Modal */}
+      {confirmState && (
+        <ConfirmModal
+          isOpen={confirmState.isOpen}
+          message={confirmState.message}
+          onConfirm={confirmState.onConfirm}
+          onCancel={() => setConfirmState(null)}
+        />
       )}
     </div>
   )

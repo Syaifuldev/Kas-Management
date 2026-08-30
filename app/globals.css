@@ -121,6 +121,11 @@ h1, h2, h3, h4, h5, h6 {
   color: rgba(255,255,255,0.3);
 }
 
+select.input-base option {
+  background-color: #111118;
+  color: #f1f5f9;
+}
+
 /* Button styles */
 .btn-primary {
   background: linear-gradient(135deg, #6366f1, #8b5cf6);
@@ -205,6 +210,7 @@ h1, h2, h3, h4, h5, h6 {
   width: 100%;
   max-width: 480px;
   max-height: 90vh;
+  margin: auto;
   overflow-y: auto;
   animation: scaleIn 0.2s ease;
 }

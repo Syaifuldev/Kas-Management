@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Wallet, Eye, EyeOff, Loader2 } from 'lucide-react'
+import { Wallet, Eye, EyeOff, Loader2, Mail, Lock } from 'lucide-react'
 import { toast } from 'sonner'
 
 export default function LoginPage() {
@@ -75,17 +75,20 @@ export default function LoginPage() {
               >
                 Email
               </label>
-              <input
-                id="email"
-                type="email"
-                name="email"
-                autoComplete="email"
-                className="input-base w-full"
-                placeholder="nama@email.com"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                required
-              />
+              <div className="relative">
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40" size={16} />
+                <input
+                  id="email"
+                  type="email"
+                  name="email"
+                  autoComplete="email"
+                  className="input-base w-full !pl-10"
+                  placeholder="nama@email.com"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  required
+                />
+              </div>
             </div>
 
             {/* Password */}
@@ -98,12 +101,13 @@ export default function LoginPage() {
                 Password
               </label>
               <div className="relative">
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40" size={16} />
                 <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   name="password"
                   autoComplete="current-password"
-                  className="input-base w-full pr-11"
+                  className="input-base w-full !pl-10 pr-11"
                   placeholder="Masukkan password"
                   value={password}
                   onChange={e => setPassword(e.target.value)}

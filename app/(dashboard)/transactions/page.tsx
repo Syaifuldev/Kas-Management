@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import React from 'react'
+import { ConfirmModal } from '@/components/ui/ConfirmModal'
 
 const CATEGORIES_INCOME = ['Iuran', 'Donasi', 'Infaq', 'Transfer', 'Lainnya']
 const CATEGORIES_EXPENSE = ['Konsumsi', 'Transport', 'Perlengkapan', 'Administrasi', 'Lainnya']
@@ -39,6 +40,7 @@ export default function TransactionsPage() {
   const [saving, setSaving] = useState(false)
   const [filter, setFilter] = useState<'all' | 'income' | 'expense'>('all')
   const [search, setSearch] = useState('')
+  const [confirmState, setConfirmState] = useState<{ isOpen: boolean, message: string, onConfirm: () => void } | null>(null)
 
   // Import / Export State
   const [importing, setImporting] = useState(false)
@@ -89,11 +91,16 @@ export default function TransactionsPage() {
     setSaving(false)
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Hapus transaksi ini?')) return
-    const { error } = await supabase.from('transactions').delete().eq('id', id)
-    if (error) toast.error('Gagal menghapus')
-    else { toast.success('Transaksi dihapus'); load() }
+  const handleDelete = (id: string) => {
+    setConfirmState({
+      isOpen: true,
+      message: 'Hapus transaksi ini? Tindakan ini tidak dapat dibatalkan.',
+      onConfirm: async () => {
+        const { error } = await supabase.from('transactions').delete().eq('id', id)
+        if (error) toast.error('Gagal menghapus')
+        else { toast.success('Transaksi dihapus'); load() }
+      }
+    })
   }
 
   const totalIncome = transactions.filter(t => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0)
@@ -324,6 +331,16 @@ export default function TransactionsPage() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Confirm Modal */}
+      {confirmState && (
+        <ConfirmModal
+          isOpen={confirmState.isOpen}
+          message={confirmState.message}
+          onConfirm={confirmState.onConfirm}
+          onCancel={() => setConfirmState(null)}
+        />
       )}
     </div>
   )
