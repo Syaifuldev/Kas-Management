@@ -11,7 +11,7 @@ import { exportParticipantsPDF, downloadParticipantsTemplate, parseExcel } from 
 import {
   ArrowLeft, Plus, Trash2, Pencil, X, Loader2, ChevronDown,
   ChevronUp, CalendarDays, Users, Wallet, CheckCircle2, Clock, AlertCircle,
-  FileDown, FileUp
+  FileDown, FileUp, Search
 } from 'lucide-react'
 import { toast } from 'sonner'
 import Link from 'next/link'
@@ -49,6 +49,7 @@ export default function EventDetailPage() {
   const [participants, setParticipants] = useState<ParticipantWithData[]>([])
   const [loading, setLoading] = useState(true)
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
 
   // Participant modal
   const [showParticipantModal, setShowParticipantModal] = useState(false)
@@ -382,6 +383,17 @@ export default function EventDetailPage() {
         </div>
       </div>
 
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" size={16} />
+        <input
+          type="text"
+          placeholder="Cari nama peserta..."
+          className="input-base pl-10"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </div>
+
       {participants.length === 0 && (
         <div className="glass rounded-2xl text-center py-12">
           <div className="text-4xl mb-3">👥</div>
@@ -392,7 +404,7 @@ export default function EventDetailPage() {
       )}
 
       <div className="space-y-3">
-        {participants.map((p, idx) => {
+        {participants.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase())).map((p, idx) => {
           const pctParticipant = p.activeTarget > 0 ? Math.min((p.totalPaid / p.activeTarget) * 100, 100) : 0
           const isExpanded = expandedId === p.id
           return (
