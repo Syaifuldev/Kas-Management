@@ -388,7 +388,7 @@ export default function EventDetailPage() {
         <input
           type="text"
           placeholder="Cari nama peserta..."
-          className="input-base pl-10"
+          className="input-base !pl-10"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
