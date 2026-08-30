@@ -221,7 +221,7 @@ export default function TransactionsPage() {
       <div className="flex flex-wrap gap-2 mb-4">
         <div className="relative flex-1 min-w-48">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'rgba(255,255,255,0.3)' }} />
-          <input className="input-base pl-9 py-2 text-sm" placeholder="Cari transaksi..." value={search} onChange={e => setSearch(e.target.value)} />
+          <input className="input-base !pl-9 py-2 text-sm" placeholder="Cari transaksi..." value={search} onChange={e => setSearch(e.target.value)} />
         </div>
         <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
           {(['all', 'income', 'expense'] as const).map(f => (
