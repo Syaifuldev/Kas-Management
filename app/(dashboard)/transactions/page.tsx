@@ -179,16 +179,16 @@ export default function TransactionsPage() {
           <h1 className="text-2xl font-bold" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Buku Kas</h1>
           <p className="text-sm mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>{activeKas?.name ?? '-'}</p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <button onClick={handleExportPDF} disabled={exporting} className="btn-secondary text-sm py-2 px-3 flex items-center gap-1">
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full sm:w-auto">
+          <button onClick={handleExportPDF} disabled={exporting} className="btn-secondary text-sm py-2 px-3 flex items-center justify-center gap-1">
             {exporting ? <Loader2 size={14} className="animate-spin" /> : <FileDown size={14} />} PDF
           </button>
           
-          <div className="relative group">
-            <button className="btn-secondary text-sm py-2 px-3 flex items-center gap-1">
-              <FileUp size={14} /> Import Excel
+          <div className="relative group w-full">
+            <button className="btn-secondary w-full text-sm py-2 px-3 flex items-center justify-center gap-1">
+              <FileUp size={14} /> Import
             </button>
-            <div className="absolute right-0 top-full mt-1 w-48 p-2 rounded-xl glass border border-white/10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+            <div className="absolute right-0 top-full mt-1 w-48 p-2 rounded-xl glass border border-white/10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-20">
               <button onClick={downloadTransactionsTemplate} className="w-full text-left px-3 py-2 text-xs rounded-lg hover:bg-white/5 transition-colors mb-1" style={{ color: 'rgba(255,255,255,0.7)' }}>
                 1. Download Template
               </button>
@@ -199,49 +199,46 @@ export default function TransactionsPage() {
             </div>
           </div>
 
-          <button className="btn-secondary text-sm py-2 px-3 hidden sm:flex" onClick={() => openAdd('expense')}>
+          <button className="btn-secondary text-sm py-2 px-3 flex items-center justify-center gap-1" onClick={() => openAdd('expense')}>
             <ArrowDownRight size={14} style={{ color: '#f87171' }} /> Pengeluaran
           </button>
-          <button className="btn-primary text-sm py-2 px-3 ml-auto sm:ml-0" onClick={() => openAdd('income')}>
+          <button className="btn-primary text-sm py-2 px-3 flex items-center justify-center gap-1" onClick={() => openAdd('income')}>
             <Plus size={14} /> Pemasukan
           </button>
         </div>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-3 mb-6">
-        <div className="glass rounded-2xl p-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
+        <div className="glass rounded-2xl p-4 col-span-2 sm:col-span-1 flex flex-col justify-center">
           <p className="text-xs mb-1" style={{ color: 'rgba(255,255,255,0.4)' }}>Saldo</p>
-          <p className="text-lg font-bold" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', color: balance >= 0 ? '#a5b4fc' : '#f87171' }}>{formatRupiah(balance)}</p>
+          <p className="text-2xl sm:text-lg font-bold truncate" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', color: balance >= 0 ? '#a5b4fc' : '#f87171' }}>{formatRupiah(balance)}</p>
         </div>
-        <div className="glass rounded-2xl p-4">
+        <div className="glass rounded-2xl p-4 flex flex-col justify-center min-w-0">
           <p className="text-xs mb-1" style={{ color: 'rgba(255,255,255,0.4)' }}>Masuk</p>
-          <p className="text-lg font-bold" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', color: '#4ade80' }}>{formatRupiah(totalIncome)}</p>
+          <p className="text-sm sm:text-lg font-bold truncate" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', color: '#4ade80' }}>{formatRupiah(totalIncome)}</p>
         </div>
-        <div className="glass rounded-2xl p-4">
+        <div className="glass rounded-2xl p-4 flex flex-col justify-center min-w-0">
           <p className="text-xs mb-1" style={{ color: 'rgba(255,255,255,0.4)' }}>Keluar</p>
-          <p className="text-lg font-bold" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', color: '#f87171' }}>{formatRupiah(totalExpense)}</p>
+          <p className="text-sm sm:text-lg font-bold truncate" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif', color: '#f87171' }}>{formatRupiah(totalExpense)}</p>
         </div>
       </div>
 
       {/* Filters */}
       <div className="flex flex-wrap gap-2 mb-4">
-        <div className="relative flex-1 min-w-48">
+        <div className="relative flex-1 min-w-[200px]">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'rgba(255,255,255,0.3)' }} />
-          <input className="input-base !pl-9 py-2 text-sm" placeholder="Cari transaksi..." value={search} onChange={e => setSearch(e.target.value)} />
+          <input className="input-base !pl-9 py-2 text-sm w-full" placeholder="Cari transaksi..." value={search} onChange={e => setSearch(e.target.value)} />
         </div>
-        <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="flex gap-1 p-1 rounded-xl w-full sm:w-auto" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
           {(['all', 'income', 'expense'] as const).map(f => (
             <button key={f} onClick={() => setFilter(f)}
-              className="px-3 py-1.5 rounded-lg text-sm transition-all"
+              className="flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-sm transition-all text-center"
               style={filter === f ? { background: 'rgba(99,102,241,0.2)', color: '#a5b4fc', fontWeight: 600 } : { color: 'rgba(255,255,255,0.4)' }}>
               {f === 'all' ? 'Semua' : f === 'income' ? 'Masuk' : 'Keluar'}
             </button>
           ))}
         </div>
-        <button className="btn-secondary text-sm py-2 px-3 sm:hidden" onClick={() => openAdd('expense')}>
-          <ArrowDownRight size={14} style={{ color: '#f87171' }} /> Keluar
-        </button>
       </div>
 
       {/* List */}

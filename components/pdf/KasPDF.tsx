@@ -92,18 +92,33 @@ const styles = StyleSheet.create({
   typeIncome: { color: '#16a34a', fontFamily: 'Helvetica-Bold' },
   typeExpense: { color: '#dc2626', fontFamily: 'Helvetica-Bold' },
   
-  // Summary Row
-  summaryRow: {
+  // Summary Cards
+  summaryContainer: {
+    flexDirection: 'row',
+    marginBottom: 20
+  },
+  summaryCard: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    backgroundColor: '#f8fafc'
+  },
+  summaryCardDark: {
     backgroundColor: '#1e293b',
-    color: '#ffffff'
+    borderColor: '#1e293b'
   },
-  summaryRowSub: {
-    backgroundColor: '#334155',
-    color: '#ffffff'
+  summaryLabel: {
+    fontSize: 8,
+    color: '#64748b',
+    marginBottom: 4
   },
-  summaryCell: {
-    margin: 2,
-    fontSize: 9,
+  summaryLabelDark: {
+    color: '#94a3b8'
+  },
+  summaryValue: {
+    fontSize: 12,
     fontFamily: 'Helvetica-Bold'
   },
   
@@ -172,6 +187,22 @@ export const KasPDF = ({ kasName, transactions, note }: KasPDFProps) => {
           </View>
         </View>
 
+        {/* Summary Cards */}
+        <View style={styles.summaryContainer}>
+          <View style={[styles.summaryCard, { marginRight: 10 }]}>
+            <Text style={styles.summaryLabel}>Total Pemasukan</Text>
+            <Text style={[styles.summaryValue, { color: '#16a34a' }]}>{formatRupiah(totalIncome)}</Text>
+          </View>
+          <View style={[styles.summaryCard, { marginRight: 10 }]}>
+            <Text style={styles.summaryLabel}>Total Pengeluaran</Text>
+            <Text style={[styles.summaryValue, { color: '#dc2626' }]}>{formatRupiah(totalExpense)}</Text>
+          </View>
+          <View style={[styles.summaryCard, styles.summaryCardDark]}>
+            <Text style={[styles.summaryLabel, styles.summaryLabelDark]}>Saldo Akhir</Text>
+            <Text style={[styles.summaryValue, { color: '#a5b4fc' }]}>{formatRupiah(totalIncome - totalExpense)}</Text>
+          </View>
+        </View>
+
         {/* Table */}
         <View style={styles.table}>
           {/* Header */}
@@ -191,7 +222,7 @@ export const KasPDF = ({ kasName, transactions, note }: KasPDFProps) => {
               <View style={[styles.tableCol, styles.colDate]}><Text style={styles.cellText}>{r.date}</Text></View>
               <View style={[styles.tableCol, styles.colType]}>
                 <Text style={[styles.cellText, r.isIncome ? styles.typeIncome : styles.typeExpense]}>
-                  {r.isIncome ? '▲ Pemasukan' : '▼ Pengeluaran'}
+                  {r.isIncome ? 'Pemasukan' : 'Pengeluaran'}
                 </Text>
               </View>
               <View style={[styles.tableCol, styles.colCategory]}><Text style={styles.cellText}>{r.category}</Text></View>
@@ -200,31 +231,6 @@ export const KasPDF = ({ kasName, transactions, note }: KasPDFProps) => {
             </View>
           ))}
           
-          {/* Summary */}
-          <View style={[styles.tableRow, styles.summaryRowSub]}>
-            <View style={[styles.tableCol, { width: '82%', textAlign: 'right' }]}>
-              <Text style={styles.summaryCell}>Total Pemasukan</Text>
-            </View>
-            <View style={[styles.tableCol, styles.colAmount]}>
-              <Text style={[styles.summaryCell, { color: '#4ade80' }]}>{formatRupiah(totalIncome)}</Text>
-            </View>
-          </View>
-          <View style={[styles.tableRow, styles.summaryRowSub]}>
-            <View style={[styles.tableCol, { width: '82%', textAlign: 'right' }]}>
-              <Text style={styles.summaryCell}>Total Pengeluaran</Text>
-            </View>
-            <View style={[styles.tableCol, styles.colAmount]}>
-              <Text style={[styles.summaryCell, { color: '#f87171' }]}>{formatRupiah(totalExpense)}</Text>
-            </View>
-          </View>
-          <View style={[styles.tableRow, styles.summaryRow]}>
-            <View style={[styles.tableCol, { width: '82%', textAlign: 'right' }]}>
-              <Text style={styles.summaryCell}>SALDO AKHIR</Text>
-            </View>
-            <View style={[styles.tableCol, styles.colAmount]}>
-              <Text style={[styles.summaryCell, { color: '#a5b4fc' }]}>{formatRupiah(totalIncome - totalExpense)}</Text>
-            </View>
-          </View>
         </View>
 
         {/* Footer */}
