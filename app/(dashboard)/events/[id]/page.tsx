@@ -398,45 +398,49 @@ export default function EventDetailPage() {
           return (
             <div key={p.id} className="glass rounded-2xl overflow-hidden transition-all" style={{ animationDelay: `${idx * 0.04}s` }}>
               {/* Participant Row */}
-              <div className="flex items-center gap-3 p-4">
-                {/* Nomor Urut */}
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-sm font-bold" style={{ background: 'linear-gradient(135deg,rgba(99,102,241,0.2),rgba(168,85,247,0.15))', color: '#a5b4fc', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-                  {idx + 1}
-                </div>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-4">
+                <div className="flex items-start sm:items-center gap-3 flex-1 min-w-0">
+                  {/* Nomor Urut */}
+                  <div className="w-9 h-9 mt-0.5 sm:mt-0 rounded-xl flex items-center justify-center flex-shrink-0 text-sm font-bold" style={{ background: 'linear-gradient(135deg,rgba(99,102,241,0.2),rgba(168,85,247,0.15))', color: '#a5b4fc', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+                    {idx + 1}
+                  </div>
 
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <p className="text-sm font-semibold truncate">{p.name}</p>
-                    {p.target_amount && (
-                      <span className="badge flex-shrink-0" style={{ background: 'rgba(99,102,241,0.15)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.2)' }}>
-                        Kustom: {formatRupiah(p.target_amount)}
-                      </span>
-                    )}
-                    <span className="badge flex-shrink-0" style={getStatusStyle(p.payment_status)}>
-                      {getStatusIcon(p.payment_status)}{getPaymentStatusLabel(p.payment_status)}
-                    </span>
-                  </div>
-                  {/* Progress bar mini */}
-                  <div className="flex items-center gap-2">
-                    <div className="progress-track flex-1" style={{ height: '5px' }}>
-                      <div className="progress-fill" style={{ width: `${pctParticipant}%`, background: pctParticipant >= 100 ? 'linear-gradient(90deg,#4ade80,#22c55e)' : 'linear-gradient(90deg,#6366f1,#a855f7)' }} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 mb-1.5">
+                      <p className="text-sm font-semibold truncate leading-tight">{p.name}</p>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {p.target_amount && (
+                          <span className="badge flex-shrink-0" style={{ background: 'rgba(99,102,241,0.15)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.2)' }}>
+                            Kustom: {formatRupiah(p.target_amount)}
+                          </span>
+                        )}
+                        <span className="badge flex-shrink-0" style={getStatusStyle(p.payment_status)}>
+                          {getStatusIcon(p.payment_status)}{getPaymentStatusLabel(p.payment_status)}
+                        </span>
+                      </div>
                     </div>
-                    <span className="text-xs flex-shrink-0" style={{ color: 'rgba(255,255,255,0.4)', minWidth: 32 }}>{Math.round(pctParticipant)}%</span>
-                  </div>
-                  <div className="flex gap-3 mt-0.5">
-                    <span className="text-xs" style={{ color: '#4ade80' }}>Bayar: {formatRupiah(p.totalPaid)}</span>
-                    {p.remaining > 0 && <span className="text-xs" style={{ color: '#f87171' }}>Sisa: {formatRupiah(p.remaining)}</span>}
+                    {/* Progress bar mini */}
+                    <div className="flex items-center gap-2">
+                      <div className="progress-track flex-1" style={{ height: '5px' }}>
+                        <div className="progress-fill" style={{ width: `${pctParticipant}%`, background: pctParticipant >= 100 ? 'linear-gradient(90deg,#4ade80,#22c55e)' : 'linear-gradient(90deg,#6366f1,#a855f7)' }} />
+                      </div>
+                      <span className="text-xs flex-shrink-0" style={{ color: 'rgba(255,255,255,0.4)', minWidth: 32 }}>{Math.round(pctParticipant)}%</span>
+                    </div>
+                    <div className="flex gap-3 mt-0.5">
+                      <span className="text-xs" style={{ color: '#4ade80' }}>Bayar: {formatRupiah(p.totalPaid)}</span>
+                      {p.remaining > 0 && <span className="text-xs" style={{ color: '#f87171' }}>Sisa: {formatRupiah(p.remaining)}</span>}
+                    </div>
                   </div>
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-1 flex-shrink-0">
-                  <button onClick={() => openAddInstallment(p.id)} className="p-2 rounded-lg text-xs hover:bg-indigo-500/20 transition-all flex items-center gap-1 font-medium" style={{ color: '#818cf8', background: 'rgba(99,102,241,0.1)' }}>
-                    <Plus size={12} /><span className="hidden sm:inline">Bayar</span>
+                <div className="flex items-center gap-1.5 flex-shrink-0 ml-12 sm:ml-0">
+                  <button onClick={() => openAddInstallment(p.id)} className="py-1.5 px-3 rounded-lg text-xs hover:bg-indigo-500/20 transition-all flex items-center justify-center gap-1 font-medium flex-1 sm:flex-none" style={{ color: '#818cf8', background: 'rgba(99,102,241,0.1)' }}>
+                    <Plus size={12} /><span>Bayar</span>
                   </button>
-                  <button onClick={() => openEditParticipant(p)} className="p-2 rounded-lg hover:bg-white/10 transition-all" style={{ color: 'rgba(255,255,255,0.4)' }}><Pencil size={13} /></button>
-                  <button onClick={() => handleDeleteParticipant(p.id, p.name)} className="p-2 rounded-lg hover:bg-red-500/15 transition-all" style={{ color: 'rgba(255,255,255,0.4)' }}><Trash2 size={13} /></button>
-                  <button onClick={() => setExpandedId(isExpanded ? null : p.id)} className="p-2 rounded-lg hover:bg-white/10 transition-all" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                  <button onClick={() => openEditParticipant(p)} className="p-1.5 rounded-lg hover:bg-white/10 transition-all" style={{ color: 'rgba(255,255,255,0.4)', background: 'rgba(255,255,255,0.05)' }}><Pencil size={13} /></button>
+                  <button onClick={() => handleDeleteParticipant(p.id, p.name)} className="p-1.5 rounded-lg hover:bg-red-500/15 transition-all" style={{ color: 'rgba(255,255,255,0.4)', background: 'rgba(255,255,255,0.05)' }}><Trash2 size={13} /></button>
+                  <button onClick={() => setExpandedId(isExpanded ? null : p.id)} className="p-1.5 rounded-lg hover:bg-white/10 transition-all" style={{ color: 'rgba(255,255,255,0.4)', background: 'rgba(255,255,255,0.05)' }}>
                     {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                   </button>
                 </div>
