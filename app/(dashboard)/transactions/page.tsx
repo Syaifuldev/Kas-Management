@@ -179,12 +179,12 @@ export default function TransactionsPage() {
           <h1 className="text-2xl font-bold" style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>Buku Kas</h1>
           <p className="text-sm mt-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>{activeKas?.name ?? '-'}</p>
         </div>
-        <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 w-full sm:w-auto">
-          <button onClick={handleExportPDF} disabled={exporting} className="btn-secondary text-sm py-2 px-3 flex items-center justify-center gap-1">
+        <div className="grid grid-cols-2 sm:flex sm:flex-row items-center gap-2 w-full md:w-auto">
+          <button onClick={handleExportPDF} disabled={exporting} className="btn-secondary w-full sm:w-auto text-sm py-2 px-3 flex items-center justify-center gap-1">
             {exporting ? <Loader2 size={14} className="animate-spin" /> : <FileDown size={14} />} PDF
           </button>
           
-          <div className="relative group w-full">
+          <div className="relative group w-full sm:w-auto">
             <button className="btn-secondary w-full text-sm py-2 px-3 flex items-center justify-center gap-1">
               <FileUp size={14} /> Import
             </button>
@@ -199,10 +199,10 @@ export default function TransactionsPage() {
             </div>
           </div>
 
-          <button className="btn-secondary text-sm py-2 px-3 flex items-center justify-center gap-1" onClick={() => openAdd('expense')}>
+          <button className="btn-secondary w-full sm:w-auto text-sm py-2 px-3 flex items-center justify-center gap-1" onClick={() => openAdd('expense')}>
             <ArrowDownRight size={14} style={{ color: '#f87171' }} /> Pengeluaran
           </button>
-          <button className="btn-primary text-sm py-2 px-3 flex items-center justify-center gap-1" onClick={() => openAdd('income')}>
+          <button className="btn-primary w-full sm:w-auto text-sm py-2 px-3 flex items-center justify-center gap-1" onClick={() => openAdd('income')}>
             <Plus size={14} /> Pemasukan
           </button>
         </div>
