@@ -78,11 +78,10 @@ const styles = StyleSheet.create({
   },
   // Columns
   colNo: { width: '8%', textAlign: 'center' },
-  colDate: { width: '16%' },
-  colType: { width: '15%' },
-  colCategory: { width: '20%' },
-  colDesc: { width: '23%' },
-  colAmount: { width: '18%', textAlign: 'right' },
+  colDate: { width: '20%' },
+  colType: { width: '18%' },
+  colDesc: { width: '34%' },
+  colAmount: { width: '20%', textAlign: 'right' },
   
   // Cells
   cellText: { margin: 2, fontSize: 8 },
@@ -210,7 +209,6 @@ export const KasPDF = ({ kasName, transactions, note }: KasPDFProps) => {
             <View style={[styles.tableCol, styles.colNo]}><Text style={styles.cellHeader}>No</Text></View>
             <View style={[styles.tableCol, styles.colDate]}><Text style={styles.cellHeader}>Tanggal</Text></View>
             <View style={[styles.tableCol, styles.colType]}><Text style={styles.cellHeader}>Tipe</Text></View>
-            <View style={[styles.tableCol, styles.colCategory]}><Text style={styles.cellHeader}>Kategori</Text></View>
             <View style={[styles.tableCol, styles.colDesc]}><Text style={styles.cellHeader}>Keterangan</Text></View>
             <View style={[styles.tableCol, styles.colAmount]}><Text style={styles.cellHeader}>Nominal</Text></View>
           </View>
@@ -225,7 +223,6 @@ export const KasPDF = ({ kasName, transactions, note }: KasPDFProps) => {
                   {r.isIncome ? 'Pemasukan' : 'Pengeluaran'}
                 </Text>
               </View>
-              <View style={[styles.tableCol, styles.colCategory]}><Text style={styles.cellText}>{r.category}</Text></View>
               <View style={[styles.tableCol, styles.colDesc]}><Text style={styles.cellText}>{r.desc}</Text></View>
               <View style={[styles.tableCol, styles.colAmount]}><Text style={styles.cellText}>{r.amountStr}</Text></View>
             </View>
