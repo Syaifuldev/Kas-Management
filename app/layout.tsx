@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 import { Toaster } from 'sonner'
+import PWAInstallPrompt from '@/components/pwa/PWAInstallPrompt'
 
 export const metadata: Metadata = {
   title: 'Setor Kene — Pencatatan Keuangan & Event',
@@ -40,6 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         {children}
+        <PWAInstallPrompt />
         <Toaster
           theme="dark"
           position="top-right"
@@ -56,3 +58,4 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </html>
   )
 }
+
