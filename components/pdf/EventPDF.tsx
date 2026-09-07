@@ -2,10 +2,8 @@ import React from 'react'
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer'
 import { formatRupiah, formatDate } from '@/lib/utils'
 
-// Baris per halaman (A4 ≈ 700pt usable area)
-// Halaman pertama lebih pendek karena ada header + stats
-const ROWS_PER_FIRST_PAGE = 28
-const ROWS_PER_NEXT_PAGE  = 36
+// react-pdf akan handle page break otomatis.
+// Header tabel di-mark `fixed` agar repeat di setiap halaman.
 
 const styles = StyleSheet.create({
   page: {
@@ -63,14 +61,6 @@ const styles = StyleSheet.create({
   },
   statLabel: { fontSize: 9, color: '#64748b', marginBottom: 4 },
   statValue: { fontSize: 13, fontFamily: 'Helvetica-Bold', color: '#0f172a' },
-
-  // Continuation label
-  continuationLabel: {
-    fontSize: 9,
-    color: '#64748b',
-    marginBottom: 10,
-    fontStyle: 'italic'
-  },
 
   // Table
   table: {
@@ -136,9 +126,9 @@ const styles = StyleSheet.create({
   footerBrand: { fontSize: 7, color: '#94a3b8' }
 })
 
-// ── Table Header Row (reusable di setiap halaman) ──
+// ── Table Header Row — `fixed` agar repeat otomatis di setiap halaman baru ──
 const TableHeaderRow = () => (
-  <View style={[styles.tableRow, styles.tableHeader]}>
+  <View fixed style={[styles.tableRow, styles.tableHeader]}>
     <View style={[styles.tableCol, styles.colNo]}>      <Text style={styles.cellHeader}>No</Text></View>
     <View style={[styles.tableCol, styles.colName]}>    <Text style={styles.cellHeader}>Nama Peserta</Text></View>
     <View style={[styles.tableCol, styles.colStatus]}>  <Text style={styles.cellHeader}>Status</Text></View>
@@ -227,25 +217,10 @@ export const EventPDF = ({ eventName, eventDescription, eventDate, participants,
     return { idx: idx + 1, name: p.name, status: p.payment_status, target, paid: p.totalPaid, remaining }
   })
 
-  // Pecah baris ke halaman-halaman
-  const firstPageRows  = rows.slice(0, ROWS_PER_FIRST_PAGE)
-  const remainingRows  = rows.slice(ROWS_PER_FIRST_PAGE)
-  const additionalPages: RowData[][] = []
-  for (let i = 0; i < remainingRows.length; i += ROWS_PER_NEXT_PAGE) {
-    additionalPages.push(remainingRows.slice(i, i + ROWS_PER_NEXT_PAGE))
-  }
-
-  const SharedFooter = () => (
-    <View style={styles.footer} fixed>
-      <Text style={styles.footerNote}>Catatan: {note ?? 'Laporan otomatis dari Setor Kene.'}</Text>
-      <Text style={styles.footerBrand}>© Syaiful Dev - Setor Kene</Text>
-    </View>
-  )
-
   return (
     <Document>
-      {/* ── Halaman 1 ── */}
       <Page size="A4" style={styles.page}>
+        {/* Header */}
         <View style={styles.headerContainer}>
           <View style={styles.headerLeft}>
             <Text style={styles.title}>{eventName}</Text>
@@ -262,6 +237,7 @@ export const EventPDF = ({ eventName, eventDescription, eventDate, participants,
           </View>
         </View>
 
+        {/* Stats */}
         <View style={styles.statsContainer}>
           <View style={styles.statBox}>
             <Text style={styles.statLabel}>Terkumpul</Text>
@@ -277,45 +253,28 @@ export const EventPDF = ({ eventName, eventDescription, eventDate, participants,
           </View>
         </View>
 
+        {/* Table — react-pdf otomatis handle page break */}
         <View style={styles.table}>
+          {/* Header tabel pakai `fixed` supaya repeat di setiap halaman baru */}
           <TableHeaderRow />
-          {firstPageRows.map((r, i) => <DataRow key={r.idx} r={r} i={i} />)}
-          {additionalPages.length === 0 && (
-            <SummaryRow
-              paidCount={paidCount} totalParticipants={participants.length}
-              grandTotalTarget={grandTotalTarget} grandTotalPaid={grandTotalPaid}
-              grandTotalRemaining={grandTotalRemaining}
-            />
-          )}
+
+          {/* Data rows — `wrap={false}` sudah ada di DataRow agar tidak terpotong di tengah */}
+          {rows.map((r, i) => <DataRow key={r.idx} r={r} i={i} />)}
+
+          {/* Baris TOTAL */}
+          <SummaryRow
+            paidCount={paidCount} totalParticipants={participants.length}
+            grandTotalTarget={grandTotalTarget} grandTotalPaid={grandTotalPaid}
+            grandTotalRemaining={grandTotalRemaining}
+          />
         </View>
 
-        <SharedFooter />
+        {/* Footer — `fixed` supaya muncul di setiap halaman */}
+        <View style={styles.footer} fixed>
+          <Text style={styles.footerNote}>Catatan: {note ?? 'Laporan otomatis dari Setor Kene.'}</Text>
+          <Text style={styles.footerBrand}>© Syaiful Dev - Setor Kene</Text>
+        </View>
       </Page>
-
-      {/* ── Halaman Lanjutan ── */}
-      {additionalPages.map((pageRows, pageIdx) => {
-        const isLastPage   = pageIdx === additionalPages.length - 1
-        const rowOffset    = ROWS_PER_FIRST_PAGE + pageIdx * ROWS_PER_NEXT_PAGE
-        return (
-          <Page key={pageIdx} size="A4" style={styles.page}>
-            <Text style={styles.continuationLabel}>
-              {eventName} — Halaman {pageIdx + 2} (lanjutan)
-            </Text>
-            <View style={styles.table}>
-              <TableHeaderRow />
-              {pageRows.map((r, i) => <DataRow key={r.idx} r={r} i={(rowOffset + i) % 2} />)}
-              {isLastPage && (
-                <SummaryRow
-                  paidCount={paidCount} totalParticipants={participants.length}
-                  grandTotalTarget={grandTotalTarget} grandTotalPaid={grandTotalPaid}
-                  grandTotalRemaining={grandTotalRemaining}
-                />
-              )}
-            </View>
-            <SharedFooter />
-          </Page>
-        )
-      })}
     </Document>
   )
 }
