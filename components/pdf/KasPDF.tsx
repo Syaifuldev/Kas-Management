@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f9ff'
   },
   tableHeader: {
-    backgroundColor: '#6366f1',
+    backgroundColor: '#16a34a',
     color: '#ffffff',
     fontFamily: 'Helvetica-Bold'
   },
@@ -76,20 +76,23 @@ const styles = StyleSheet.create({
     borderColor: '#e2e8f0',
     padding: 6
   },
-  // Columns
-  colNo: { width: '8%', textAlign: 'center' },
-  colDate: { width: '20%' },
-  colType: { width: '18%' },
-  colDesc: { width: '34%' },
-  colAmount: { width: '20%', textAlign: 'right' },
+  // Columns - No | Tanggal | Keterangan | Pemasukan | Pengeluaran | Saldo
+  colNo: { width: '6%', textAlign: 'center' },
+  colDate: { width: '15%', textAlign: 'center' },
+  colDesc: { width: '33%' },
+  colIncome: { width: '16%', textAlign: 'right' },
+  colExpense: { width: '16%', textAlign: 'right' },
+  colSaldo: { width: '14%', textAlign: 'right' },
   
   // Cells
   cellText: { margin: 2, fontSize: 8 },
   cellHeader: { margin: 2, fontSize: 9, color: '#ffffff' },
   
-  // Badges
-  typeIncome: { color: '#16a34a', fontFamily: 'Helvetica-Bold' },
-  typeExpense: { color: '#dc2626', fontFamily: 'Helvetica-Bold' },
+  // Amount colors
+  amountIncome: { color: '#16a34a', fontFamily: 'Helvetica-Bold' },
+  amountExpense: { color: '#dc2626', fontFamily: 'Helvetica-Bold' },
+  amountDash: { color: '#16a34a' },
+  amountSaldo: { fontFamily: 'Helvetica-Bold', color: '#1e293b' },
   
   // Summary Cards
   summaryContainer: {
@@ -153,19 +156,25 @@ interface KasPDFProps {
 export const KasPDF = ({ kasName, transactions, note }: KasPDFProps) => {
   let totalIncome = 0
   let totalExpense = 0
+  let runningBalance = 0
 
   const rows = transactions.map((t, idx) => {
     const amount = Number(t.amount)
-    if (t.type === 'income') totalIncome += amount
-    else totalExpense += amount
+    if (t.type === 'income') {
+      totalIncome += amount
+      runningBalance += amount
+    } else {
+      totalExpense += amount
+      runningBalance -= amount
+    }
     
     return {
       idx: idx + 1,
       date: formatDate(t.date),
-      type: t.type === 'income' ? 'Masuk' : 'Keluar',
-      category: t.category || '-',
       desc: t.description || '-',
-      amountStr: (t.type === 'income' ? '+' : '-') + formatRupiah(amount),
+      incomeStr: t.type === 'income' ? formatRupiah(amount) : null,
+      expenseStr: t.type === 'expense' ? formatRupiah(amount) : null,
+      saldoStr: formatRupiah(runningBalance),
       isIncome: t.type === 'income'
     }
   })
@@ -204,27 +213,43 @@ export const KasPDF = ({ kasName, transactions, note }: KasPDFProps) => {
 
         {/* Table */}
         <View style={styles.table}>
-          {/* Header */}
+          {/* Header Row */}
           <View style={[styles.tableRow, styles.tableHeader]}>
             <View style={[styles.tableCol, styles.colNo]}><Text style={styles.cellHeader}>No</Text></View>
             <View style={[styles.tableCol, styles.colDate]}><Text style={styles.cellHeader}>Tanggal</Text></View>
-            <View style={[styles.tableCol, styles.colType]}><Text style={styles.cellHeader}>Tipe</Text></View>
             <View style={[styles.tableCol, styles.colDesc]}><Text style={styles.cellHeader}>Keterangan</Text></View>
-            <View style={[styles.tableCol, styles.colAmount]}><Text style={styles.cellHeader}>Nominal</Text></View>
+            <View style={[styles.tableCol, styles.colIncome]}><Text style={styles.cellHeader}>Pemasukan</Text></View>
+            <View style={[styles.tableCol, styles.colExpense]}><Text style={styles.cellHeader}>Pengeluaran</Text></View>
+            <View style={[styles.tableCol, styles.colSaldo]}><Text style={styles.cellHeader}>Saldo</Text></View>
           </View>
           
           {/* Body */}
           {rows.map((r, i) => (
             <View key={i} style={[styles.tableRow, i % 2 !== 0 ? styles.tableRowAlternate : {}]}>
-              <View style={[styles.tableCol, styles.colNo]}><Text style={styles.cellText}>{r.idx}</Text></View>
-              <View style={[styles.tableCol, styles.colDate]}><Text style={styles.cellText}>{r.date}</Text></View>
-              <View style={[styles.tableCol, styles.colType]}>
-                <Text style={[styles.cellText, r.isIncome ? styles.typeIncome : styles.typeExpense]}>
-                  {r.isIncome ? 'Pemasukan' : 'Pengeluaran'}
-                </Text>
+              <View style={[styles.tableCol, styles.colNo]}>
+                <Text style={styles.cellText}>{r.idx}</Text>
               </View>
-              <View style={[styles.tableCol, styles.colDesc]}><Text style={styles.cellText}>{r.desc}</Text></View>
-              <View style={[styles.tableCol, styles.colAmount]}><Text style={styles.cellText}>{r.amountStr}</Text></View>
+              <View style={[styles.tableCol, styles.colDate]}>
+                <Text style={styles.cellText}>{r.date}</Text>
+              </View>
+              <View style={[styles.tableCol, styles.colDesc]}>
+                <Text style={styles.cellText}>{r.desc}</Text>
+              </View>
+              <View style={[styles.tableCol, styles.colIncome]}>
+                {r.incomeStr
+                  ? <Text style={[styles.cellText, styles.amountIncome]}>{r.incomeStr}</Text>
+                  : <Text style={[styles.cellText, styles.amountDash]}>-</Text>
+                }
+              </View>
+              <View style={[styles.tableCol, styles.colExpense]}>
+                {r.expenseStr
+                  ? <Text style={[styles.cellText, styles.amountExpense]}>{r.expenseStr}</Text>
+                  : <Text style={[styles.cellText, styles.amountDash]}>-</Text>
+                }
+              </View>
+              <View style={[styles.tableCol, styles.colSaldo]}>
+                <Text style={[styles.cellText, styles.amountSaldo]}>{r.saldoStr}</Text>
+              </View>
             </View>
           ))}
           
