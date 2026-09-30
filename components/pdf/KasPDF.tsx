@@ -47,14 +47,13 @@ const styles = StyleSheet.create({
   
   // Table
   table: {
-    width: 'auto',
-    borderStyle: 'solid',
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    borderRightWidth: 0,
-    borderBottomWidth: 0,
-    borderRadius: 4,
-    overflow: 'hidden'
+    width: 'auto'
+  },
+  tableHeaderFixed: {
+    backgroundColor: '#6366f1',
+    color: '#ffffff',
+    fontFamily: 'Helvetica-Bold',
+    flexDirection: 'row'
   },
   tableRow: {
     margin: 'auto',
@@ -64,7 +63,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f9ff'
   },
   tableHeader: {
-    backgroundColor: '#16a34a',
+    backgroundColor: '#6366f1',
     color: '#ffffff',
     fontFamily: 'Helvetica-Bold'
   },
@@ -213,8 +212,8 @@ export const KasPDF = ({ kasName, transactions, note }: KasPDFProps) => {
 
         {/* Table */}
         <View style={styles.table}>
-          {/* Header Row */}
-          <View style={[styles.tableRow, styles.tableHeader]}>
+          {/* Header Row - fixed agar muncul di setiap halaman */}
+          <View style={[styles.tableRow, styles.tableHeader]} fixed>
             <View style={[styles.tableCol, styles.colNo]}><Text style={styles.cellHeader}>No</Text></View>
             <View style={[styles.tableCol, styles.colDate]}><Text style={styles.cellHeader}>Tanggal</Text></View>
             <View style={[styles.tableCol, styles.colDesc]}><Text style={styles.cellHeader}>Keterangan</Text></View>
@@ -225,7 +224,7 @@ export const KasPDF = ({ kasName, transactions, note }: KasPDFProps) => {
           
           {/* Body */}
           {rows.map((r, i) => (
-            <View key={i} style={[styles.tableRow, i % 2 !== 0 ? styles.tableRowAlternate : {}]}>
+            <View key={i} style={[styles.tableRow, i % 2 !== 0 ? styles.tableRowAlternate : {}]} wrap={false}>
               <View style={[styles.tableCol, styles.colNo]}>
                 <Text style={styles.cellText}>{r.idx}</Text>
               </View>
